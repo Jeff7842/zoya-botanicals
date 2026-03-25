@@ -6,6 +6,7 @@ import Script from "next/script";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Icon } from "@iconify/react";
 import "@/components/css/main.css";
+import "@/components/css/signup.css";
 import { useTheme } from "next-themes";
 
 declare global {
@@ -332,7 +333,7 @@ export default function ZoyaSignupPage() {
       <main className="min-h-screen font-body bg-[#f9f9fc] text-[#1a1c1e] transition-colors duration-300 dark:bg-[#140a2f] dark:text-white">
         <div className="flex min-h-screen flex-col md:flex-row ">
 
-          <section className="relative flex min-h-screen w-[70%] md:flex-[1.3] items-center justify-center bg-[#f4f4f7] px-6 py-8 dark:bg-[#120c24] md:w-1/2 md:px-10 md:py-12">
+          <section className="relative flex min-h-screen md:w-[70%] lg:w-[70%] w-full md:flex-[1.3] items-center justify-center bg-[#f4f4f7] px-6 py-8 dark:bg-[#120c24] md:w-1/2 md:px-10 md:py-12">
             <button
               type="button"
               onClick={toggleTheme}
@@ -617,7 +618,7 @@ export default function ZoyaSignupPage() {
                     />
                   </div>
 
-                  <div className="rounded-2xl border border-[#cac4d5]/55 bg-white/80 p-4 dark:border-white/10 dark:bg-[#1b1431]">
+                  <div className="hidden rounded-2xl border border-[#cac4d5]/55 bg-white/80 p-4 dark:border-white/10 dark:bg-[#1b1431]">
                     <p className="mb-3 text-[0.78rem] font-extrabold uppercase tracking-[0.18em] text-[#6d6778] dark:text-[#b7b1c5]">
                       Security Verification
                     </p>
@@ -631,13 +632,25 @@ export default function ZoyaSignupPage() {
                     )}
                   </div>
 
-                  <button
-                    type="submit"
-                    disabled={!canSubmit}
-                    className="w-full max-w-[75%]  text-center flex items-center justify-center rounded-2xl bg-[#34058d] px-6 py-4 text-[1.08rem] font-extrabold tracking-[0.02em] text-white shadow-[0_20px_40px_rgba(52,5,141,0.18)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#4b2ba3] disabled:cursor-not-allowed disabled:opacity-55"
-                  >
-                    Create Account
-                  </button>
+                  <div className="rounded-0 border border-[#cac4d5]/0 bg-white/0 p-0 dark:border-white/0 dark:bg-[#1b143100]">
+                    {TURNSTILE_SITE_KEY ? (
+                      <div ref={turnstileRef} className="min-h-[65px]" />
+                    ) : (
+                      <div className="rounded-xl border border-dashed border-[#cac4d5] px-4 py-4 text-sm text-[#7b7588] dark:border-white/10 dark:text-[#a9a2ba]">
+                       The <span className="font-bold">TurnStile uanble</span> to render.
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex justify-center">
+  <button
+    type="submit"
+    disabled={!canSubmit}
+    className="w-full md:max-w-[75%] lg:max-w-[75%] rounded-2xl bg-[#34058d] px-6 py-4 text-[1.08rem] font-extrabold tracking-[0.02em] text-white shadow-[0_20px_40px_rgba(52,5,141,0.18)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#4b2ba3] disabled:cursor-not-allowed disabled:opacity-55"
+  >
+    Create Account
+  </button>
+</div>
                 </form>
 
                 <div className="relative my-10">
@@ -885,25 +898,28 @@ function CheckboxField({
   hint,
 }: CheckboxFieldProps) {
   return (
-    <label className="flex cursor-pointer items-start gap-3">
+    <div className="checkbox-wrapper-46">
       <input
         id={id}
         name={id}
         type="checkbox"
         checked={checked}
         onChange={onChange}
-        className="mt-1 h-5 w-5 rounded-md border-0 bg-[#e2e2e5] text-[#34058d] shadow-none ring-0 focus:ring-0 dark:bg-[#2a2047]"
+        className="inp-cbx"
       />
-      <span className="block">
-        <span className="block text-[0.98rem] font-medium text-[#312d39] dark:text-[#d9d4e5]">
-          {label}
+
+      <label htmlFor={id} className="cbx">
+        <span className="cbx-box">
+          <svg width="12px" height="10px" viewBox="0 0 12 10">
+            <polyline points="1.5 6 4.5 9 10.5 1" />
+          </svg>
         </span>
-        {hint ? (
-          <span className="mt-1 block text-[0.86rem] text-[#6c6677] dark:text-[#aaa3bb]">
-            {hint}
-          </span>
-        ) : null}
-      </span>
-    </label>
+
+        <span className="flex-1">
+          <span className="cbx-label">{label}</span>
+          {hint ? <span className="cbx-hint block">{hint}</span> : null}
+        </span>
+      </label>
+    </div>
   );
 }
