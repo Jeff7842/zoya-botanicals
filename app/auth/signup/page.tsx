@@ -337,7 +337,7 @@ export default function ZoyaSignupPage() {
             <button
               type="button"
               onClick={toggleTheme}
-              className="absolute right-5 top-5 flex h-12 w-12 items-center justify-center rounded-2xl border border-[#cac4d5]/65 bg-white text-[#34058d] shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#f3f3f6] dark:border-white/10 dark:bg-[#1b1431] dark:text-[#ffe24c] dark:hover:bg-[#251b43]"
+              className="absolute right-5 top-5 flex h-12 w-12 items-center justify-center rounded-xl border border-[#cac4d5]/65 bg-white text-[#34058d] shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#f3f3f6] dark:border-white/10 dark:bg-[#1b1431] dark:text-[#ffe24c] dark:hover:bg-[#251b43]"
               aria-label="Toggle theme"
             >
               <Icon
@@ -349,7 +349,7 @@ export default function ZoyaSignupPage() {
             <div className="w-full max-w-[54rem] rounded-[2rem] bg-transparent py-[3vh]">
               <div className="mx-auto w-full max-w-[52rem]">
                 <div className="mb-8 flex justify-center">
-                  <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-2xl bg-transparent">
+                  <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-xl bg-transparent">
                     <Image
                       src={logoSrc}
                       alt="ZOYA Botanicals"
@@ -411,7 +411,7 @@ export default function ZoyaSignupPage() {
                         Phone Number
                       </label>
 
-                      <div className="flex h-16 overflow-hidden rounded-2xl bg-[#e2e2e5] transition-all duration-200 focus-within:bg-white focus-within:shadow-[0_16px_30px_rgba(52,5,141,0.06)] dark:bg-[#251d3d] dark:focus-within:bg-[#1d1533]">
+                      <div className="flex h-16 overflow-hidden rounded-xl bg-[#e2e2e5] transition-all duration-200 focus-within:bg-white focus-within:shadow-[0_16px_30px_rgba(52,5,141,0.06)] dark:bg-[#251d3d] dark:focus-within:bg-[#1d1533]">
                         <select
                           name="dialCode"
                           value={form.dialCode}
@@ -464,7 +464,7 @@ export default function ZoyaSignupPage() {
                           name="country"
                           value={form.country}
                           onChange={onCountryChange}
-                          className="h-16 w-full rounded-2xl border-0 bg-[#e2e2e5] pl-14 pr-5 text-[1rem] font-medium text-[#34058d] outline-none ring-0 transition-all duration-200 focus:bg-white focus:shadow-[0_16px_30px_rgba(52,5,141,0.06)] dark:bg-[#251d3d] dark:text-[#e7deff] dark:focus:bg-[#1d1533]"
+                          className="h-16 w-full rounded-xl border-0 bg-[#e2e2e5] pl-14 pr-5 text-[1rem] font-medium text-[#34058d] outline-none ring-0 transition-all duration-200 focus:bg-white focus:shadow-[0_16px_30px_rgba(52,5,141,0.06)] dark:bg-[#251d3d] dark:text-[#e7deff] dark:focus:bg-[#1d1533]"
                         >
                           {countryLoading ? (
                             <option>Loading countries...</option>
@@ -498,7 +498,7 @@ export default function ZoyaSignupPage() {
                           value={form.city}
                           onChange={handleInputChange}
                           disabled={cityLoading || cities.length === 0}
-                          className="h-16 w-full rounded-2xl border-0 bg-[#e2e2e5] pl-14 pr-5 text-[1rem] font-medium text-[#34058d] outline-none ring-0 transition-all duration-200 focus:bg-white focus:shadow-[0_16px_30px_rgba(52,5,141,0.06)] disabled:cursor-not-allowed disabled:opacity-70 dark:bg-[#251d3d] dark:text-[#e7deff] dark:focus:bg-[#1d1533]"
+                          className="h-16 w-full rounded-xl border-0 bg-[#e2e2e5] pl-14 pr-5 text-[1rem] font-medium text-[#34058d] outline-none ring-0 transition-all duration-200 focus:bg-white focus:shadow-[0_16px_30px_rgba(52,5,141,0.06)] disabled:cursor-not-allowed disabled:opacity-70 dark:bg-[#251d3d] dark:text-[#e7deff] dark:focus:bg-[#1d1533]"
                         >
                           <option value="">
                             {cityLoading
@@ -539,7 +539,7 @@ export default function ZoyaSignupPage() {
                     />
                   </div>
 
-                  <div className="rounded-2xl border border-[#cac4d5]/0 bg-white/0 p-4 dark:border-white/0 dark:bg-[#1b1431]/0">
+                  <div className="rounded-xl border border-[#cac4d5]/0 bg-white/0 p-4 dark:border-white/0 dark:bg-[#1b1431]/0">
                     <p className="mb-3 text-[0.78rem] font-extrabold uppercase tracking-[0.18em] text-[#6d6778] dark:text-[#b7b1c5]">
                       Password Checklist
                     </p>
@@ -594,7 +594,7 @@ export default function ZoyaSignupPage() {
                     )}
                   </div>
 
-                  <div className="space-y-4 rounded-2xl border border-[#cac4d5]/55 bg-white/70 p-5 dark:border-white/10 dark:bg-[#1b1431]/80">
+                  <div className="space-y-4 rounded-xl border border-[#cac4d5]/55 bg-white/70 p-5 dark:border-white/10 dark:bg-[#1b1431]/80">
                     <CheckboxField
                       id="isAdult"
                       checked={form.isAdult}
@@ -618,7 +618,7 @@ export default function ZoyaSignupPage() {
                     />
                   </div>
 
-                  <div className="hidden rounded-2xl border border-[#cac4d5]/55 bg-white/80 p-4 dark:border-white/10 dark:bg-[#1b1431]">
+                  <div className="hidden rounded-xl border border-[#cac4d5]/55 bg-white/80 p-4 dark:border-white/10 dark:bg-[#1b1431]">
                     <p className="mb-3 text-[0.78rem] font-extrabold uppercase tracking-[0.18em] text-[#6d6778] dark:text-[#b7b1c5]">
                       Security Verification
                     </p>
@@ -646,14 +646,14 @@ export default function ZoyaSignupPage() {
   <button
     type="submit"
     disabled={!canSubmit}
-    className="w-full md:max-w-[75%] lg:max-w-[75%] rounded-2xl bg-[#34058d] px-6 py-4 text-[1.08rem] font-extrabold tracking-[0.02em] text-white shadow-[0_20px_40px_rgba(52,5,141,0.18)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#4b2ba3] disabled:cursor-not-allowed disabled:opacity-55"
+    className="w-full md:max-w-[75%] lg:max-w-[75%] rounded-xl bg-[#34058d] px-6 py-4 text-[1.08rem] font-extrabold tracking-[0.02em] text-white shadow-[0_20px_40px_rgba(52,5,141,0.18)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#4b2ba3] disabled:cursor-not-allowed disabled:opacity-55"
   >
     Create Account
   </button>
 </div>
                 </form>
 
-                <div className="relative my-10">
+                <div className="relative mt-15 mb-10 md:my-10">
                   <div className="absolute inset-0 flex items-center">
                     <div className="w-full border-t border-[#cac4d5]/45 dark:border-white/10" />
                   </div>
@@ -664,10 +664,10 @@ export default function ZoyaSignupPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 -mt-2 md:mt-0 md:gap-4">
                   <button
                     type="button"
-                    className="flex items-center justify-center gap-3 rounded-2xl border border-[#cac4d5]/70 bg-white px-4 py-4 text-[1.05rem] font-semibold text-[#1a1c1e] transition-colors duration-200 hover:bg-[#f3f3f6] dark:border-white/10 dark:bg-[#1b1431] dark:text-white dark:hover:bg-[#251b43]"
+                    className="flex items-center justify-center gap-3 rounded-xl border border-[#cac4d5]/70 bg-white px-4 py-4 text-[1.05rem] font-semibold text-[#1a1c1e] transition-colors duration-200 hover:bg-[#f3f3f6] dark:border-white/10 dark:bg-[#1b1431] dark:text-white dark:hover:bg-[#251b43]"
                   >
                     <Icon icon="logos:google-icon" className="text-xl" />
                     <span>Google</span>
@@ -675,7 +675,7 @@ export default function ZoyaSignupPage() {
 
                   <button
                     type="button"
-                    className="flex items-center justify-center gap-3 rounded-2xl border border-[#cac4d5]/70 bg-white px-4 py-4 text-[1.05rem] font-semibold text-[#1a1c1e] transition-colors duration-200 hover:bg-[#f3f3f6] dark:border-white/10 dark:bg-[#1b1431] dark:text-white dark:hover:bg-[#251b43]"
+                    className="flex items-center justify-center gap-3 rounded-xl border border-[#cac4d5]/70 bg-white px-4 py-4 text-[1.05rem] font-semibold text-[#1a1c1e] transition-colors duration-200 hover:bg-[#f3f3f6] dark:border-white/10 dark:bg-[#1b1431] dark:text-white dark:hover:bg-[#251b43]"
                   >
                     <Icon icon="logos:apple" className="text-xl" />
                     <span>Apple</span>
@@ -685,7 +685,7 @@ export default function ZoyaSignupPage() {
                 <p className="mt-12 text-center text-[1rem] font-medium text-[#494553] dark:text-[#c9c4d7]">
                   Already have an account?
                   <Link
-                    href="/login"
+                    href="/auth/login"
                     className="ml-2 font-extrabold text-[#34058d] transition-colors duration-200 hover:text-[#4b2ba3] dark:text-[#cdbdff] dark:hover:text-white"
                   >
                     Sign In
@@ -750,7 +750,7 @@ export default function ZoyaSignupPage() {
                         key={index}
                         src={src}
                         alt="Curator"
-                        className="h-11 w-11 rounded-2xl border-2 border-[#4b2ba3] object-cover"
+                        className="h-11 w-11 rounded-xl border-2 border-[#4b2ba3] object-cover"
                       />
                     ))}
                   </div>
@@ -816,7 +816,7 @@ function InputField({
           value={value}
           onChange={onChange}
           placeholder={placeholder}
-          className="h-16 w-full rounded-2xl border-0 bg-[#e2e2e5] pl-14 pr-5 text-[1rem] font-medium text-[#34058d] placeholder:text-[#9b97a5] shadow-none outline-none ring-0 transition-all duration-200 focus:bg-white focus:shadow-[0_16px_30px_rgba(52,5,141,0.06)] focus:outline-none focus:ring-0 dark:bg-[#251d3d] dark:text-[#e7deff] dark:placeholder:text-[#8f88a3] dark:focus:bg-[#1d1533]"
+          className="h-16 w-full rounded-xl border-0 bg-[#e2e2e5] pl-14 pr-5 text-[1rem] font-medium text-[#34058d] placeholder:text-[#9b97a5] shadow-none outline-none ring-0 transition-all duration-200 focus:bg-white focus:shadow-[0_16px_30px_rgba(52,5,141,0.06)] focus:outline-none focus:ring-0 dark:bg-[#251d3d] dark:text-[#e7deff] dark:placeholder:text-[#8f88a3] dark:focus:bg-[#1d1533]"
         />
       </div>
     </div>
@@ -863,7 +863,7 @@ function PasswordField({
           value={value}
           onChange={onChange}
           placeholder={placeholder}
-          className="h-16 w-full rounded-2xl border-0 bg-[#e2e2e5] pl-14 pr-16 text-[1rem] font-medium text-[#34058d] placeholder:text-[#9b97a5] shadow-none outline-none ring-0 transition-all duration-200 focus:bg-white focus:shadow-[0_16px_30px_rgba(52,5,141,0.06)] focus:outline-none focus:ring-0 dark:bg-[#251d3d] dark:text-[#e7deff] dark:placeholder:text-[#8f88a3] dark:focus:bg-[#1d1533]"
+          className="h-16 w-full rounded-xl border-0 bg-[#e2e2e5] pl-14 pr-16 text-[1rem] font-medium text-[#34058d] placeholder:text-[#9b97a5] shadow-none outline-none ring-0 transition-all duration-200 focus:bg-white focus:shadow-[0_16px_30px_rgba(52,5,141,0.06)] focus:outline-none focus:ring-0 dark:bg-[#251d3d] dark:text-[#e7deff] dark:placeholder:text-[#8f88a3] dark:focus:bg-[#1d1533]"
         />
 
         <button

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Icon } from "@iconify/react";
 import "@/components/css/main.css";
+import "@/components/css/signup.css";
 import { useTheme } from "next-themes";
 
 export default function ZoyaLoginPage() {
@@ -38,15 +39,24 @@ export default function ZoyaLoginPage() {
       setTheme(next);
     };
 
-    const logoSrc =
-  mounted
-    ? resolvedTheme === "light"
-    ? "/images/zoya/zoya-symbol-dark-2.webp"
-    : "/images/zoya/zoya-symbol-yellow-2.webp"
-      
-    : resolvedTheme === "dark"
-    ? "/images/zoya/zoya-symbol-dark-2.webp"
-    : "/images/zoya/zoya-symbol-yellow-2.webp";
+    // Render a stable fallback during SSR + first client render
+  if (!mounted) {
+    return (
+      <Image
+        src="/images/zoya/zoya-symbol-yellow-2.webp"
+        alt="ZOYA Botanicals"
+        width={42}
+        height={42}
+        className="h-20 w-20 object-contain"
+        priority
+      />
+    );
+  }
+
+  const logoSrc =
+    resolvedTheme === "dark"
+      ?"/images/zoya/zoya-symbol-yellow-2.webp"
+      :"/images/zoya/zoya-symbol-dark-2.webp" ;
     
 
   return (
@@ -61,6 +71,7 @@ export default function ZoyaLoginPage() {
       src="/images/background/login.png"
       alt="Botanical background"
       fill
+      sizes="100vh"
       priority
       className="object-cover w-full h-full"
     />
@@ -102,7 +113,7 @@ export default function ZoyaLoginPage() {
                       key={index}
                       src={src}
                       alt="Curator"
-                      className="h-11 w-11 rounded-2xl border-2 border-[#4b2ba3] object-cover"
+                      className="h-11 w-11 rounded-xl border-2 border-[#4b2ba3] object-cover"
                     />
                   ))}
                 </div>
@@ -123,7 +134,7 @@ export default function ZoyaLoginPage() {
           <div className="w-full max-w-[34rem] rounded-[2rem] bg-transparent pt-[4vh] md:pt-[9vh]">
             <div className="mx-auto w-full max-w-[30rem]">
               <div className="mb-8 flex justify-center md:mb-10">
-                <div className="flex h-25 w-25 items-center justify-center overflow-hidden rounded-2xl bg-transparent shadow-[0_18px_50px_rgba(52,5,141,0.01)]">
+                <div className="flex h-25 w-25 items-center justify-center overflow-hidden rounded-xl bg-transparent shadow-[0_18px_50px_rgba(52,5,141,0.01)]">
                   <Image
                     src={logoSrc}
                     alt="ZOYA Botanicals"
@@ -162,17 +173,28 @@ export default function ZoyaLoginPage() {
                 />
 
                 <div className="flex items-center justify-between gap-4 pt-1">
-                  <label className="flex cursor-pointer items-center gap-3 text-[0.98rem] font-medium text-[#312d39] dark:text-[#d9d4e5]">
-                    <input
-                      type="checkbox"
-                      className="h-5 w-5 rounded-md border-0 bg-[#e2e2e5] text-[#34058d] shadow-none ring-0 focus:ring-0 dark:bg-[#2a2047]"
-                    />
-                    <span>Remember Me</span>
-                  </label>
+                  <div className="checkbox-wrapper-46">
+  <input
+    id="rememberMe"
+    name="rememberMe"
+    type="checkbox"
+    className="inp-cbx"
+  />
+
+  <label htmlFor="rememberMe" className="cbx">
+    <span className="cbx-box">
+      <svg width="12px" height="10px" viewBox="0 0 12 10">
+        <polyline points="1.5 6 4.5 9 10.5 1" />
+      </svg>
+    </span>
+
+    <span className="cbx-label">Remember Me</span>
+  </label>
+</div>
 
                   <Link
-                    href="#"
-                    className="text-[0.98rem] font-bold text-[#34058d] transition-colors duration-200 hover:text-[#4b2ba3] dark:text-[#cdbdff] dark:hover:text-white"
+                    href="/reset-password"
+                    className="text-[0.98rem] font-bold text-[#34058d] transition-colors duration-200 hover:text-[#4b2ba3] dark:text-[#cdbdff] active:text-[#633ccd] dark:active:text-[#a997de] active:underline hover:underline dark:hover:text-white"
                   >
                     Forgot Password?
                   </Link>
@@ -181,14 +203,14 @@ export default function ZoyaLoginPage() {
                 <div className="pt-3">
                   <button
                     type="submit"
-                    className="w-full rounded-2xl bg-[#34058d] px-6 py-4 text-[1.15rem] font-extrabold tracking-[-0.01em] text-white shadow-[0_20px_40px_rgba(52,5,141,0.18)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#4b2ba3]"
+                    className="w-full rounded-xl bg-[#34058d] px-6 py-4 text-[1.15rem] font-extrabold tracking-[-0.01em] text-white shadow-[0_20px_40px_rgba(52,5,141,0.18)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#4b2ba3]"
                   >
                     Sign In to Account
                   </button>
                 </div>
               </form>
 
-              <div className="relative my-10">
+              <div className="relative mt-15 mb-10 md:my-10">
                 <div className="absolute inset-0 flex items-center">
                   <div className="w-full border-t border-[#cac4d5]/45 dark:border-white/10" />
                 </div>
@@ -199,10 +221,10 @@ export default function ZoyaLoginPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 -mt-4 md:mt-0 md:gap-4">
                 <button
                   type="button"
-                  className="flex items-center justify-center gap-3 rounded-2xl border border-[#cac4d5]/70 bg-white px-4 py-4 text-[1.05rem] font-semibold text-[#1a1c1e] transition-colors duration-200 hover:bg-[#f3f3f6] dark:border-white/10 dark:bg-[#1b1431] dark:text-white dark:hover:bg-[#251b43]"
+                  className="flex items-center justify-center gap-3 rounded-xl border border-[#cac4d5]/70 bg-white px-4 py-4 text-[1.05rem] font-semibold text-[#1a1c1e] transition-colors duration-200 hover:bg-[#f3f3f6] dark:border-white/10 dark:bg-[#1b1431] dark:text-white dark:hover:bg-[#251b43]"
                 >
                   <Icon icon="logos:google-icon" className="text-xl" />
                   <span>Google</span>
@@ -210,7 +232,7 @@ export default function ZoyaLoginPage() {
 
                 <button
                   type="button"
-                  className="flex items-center justify-center gap-3 rounded-2xl border border-[#cac4d5]/70 bg-white px-4 py-4 text-[1.05rem] font-semibold text-[#1a1c1e] transition-colors duration-200 hover:bg-[#f3f3f6] dark:border-white/10 dark:bg-[#1b1431] dark:text-white dark:hover:bg-[#251b43]"
+                  className="flex items-center justify-center gap-3 rounded-xl border border-[#cac4d5]/70 bg-white px-4 py-4 text-[1.05rem] font-semibold text-[#1a1c1e] transition-colors duration-200 hover:bg-[#f3f3f6] dark:border-white/10 dark:bg-[#1b1431] dark:text-white dark:hover:bg-[#251b43]"
                 >
                   <Icon icon="logos:apple" className="text-xl" />
                   <span>Apple</span>
@@ -290,7 +312,7 @@ function InputField({ id, label, type, placeholder, icon }: InputFieldProps) {
           name={id}
           type={type}
           placeholder={placeholder}
-          className="h-16 w-full rounded-2xl border-0 bg-[#e2e2e5] pl-14 pr-5 text-[1rem] font-medium text-[#34058d] placeholder:text-[#9b97a5] shadow-none outline-none ring-0 transition-all duration-200 focus:bg-white focus:shadow-[0_16px_30px_rgba(52,5,141,0.06)] focus:outline-none focus:ring-0 dark:bg-[#251d3d] dark:text-[#e7deff] dark:placeholder:text-[#8f88a3] dark:focus:bg-[#1d1533]"
+          className="h-16 w-full rounded-xl border-0 bg-[#e2e2e5] pl-14 pr-5 text-[1rem] font-medium text-[#34058d] placeholder:text-[#9b97a5] shadow-none outline-none ring-0 transition-all duration-200 focus:bg-white focus:shadow-[0_16px_30px_rgba(52,5,141,0.06)] focus:outline-none focus:ring-0 dark:bg-[#251d3d] dark:text-[#e7deff] dark:placeholder:text-[#8f88a3] dark:focus:bg-[#1d1533]"
         />
       </div>
     </div>
@@ -331,7 +353,7 @@ function PasswordField({
           name={id}
           type={showPassword ? "text" : "password"}
           placeholder={placeholder}
-          className="h-16 w-full rounded-2xl border-0 bg-[#e2e2e5] pl-14 pr-16 text-[1rem] font-medium text-[#34058d] placeholder:text-[#9b97a5] shadow-none outline-none ring-0 transition-all duration-200 focus:bg-white focus:shadow-[0_16px_30px_rgba(52,5,141,0.06)] focus:outline-none focus:ring-0 dark:bg-[#251d3d] dark:text-[#e7deff] dark:placeholder:text-[#8f88a3] dark:focus:bg-[#1d1533]"
+          className="h-16 w-full rounded-xl border-0 bg-[#e2e2e5] pl-14 pr-16 text-[1rem] font-medium text-[#34058d] placeholder:text-[#9b97a5] shadow-none outline-none ring-0 transition-all duration-200 focus:bg-white focus:shadow-[0_16px_30px_rgba(52,5,141,0.06)] focus:outline-none focus:ring-0 dark:bg-[#251d3d] dark:text-[#e7deff] dark:placeholder:text-[#8f88a3] dark:focus:bg-[#1d1533]"
         />
 
         <button
