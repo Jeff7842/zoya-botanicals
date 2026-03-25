@@ -40,7 +40,7 @@ function generateInquiryReference(date = new Date()) {
 
 
 
-export async function ReceivedPage({ searchParams }: ReceivedPageProps) {
+export default async function ReceivedPage({ searchParams }: ReceivedPageProps) {
   const params = await searchParams;
   const reference = params?.ref || generateInquiryReference();
 
@@ -112,3 +112,4 @@ export async function ReceivedPage({ searchParams }: ReceivedPageProps) {
     </div>
   );
 }
+
