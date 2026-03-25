@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Manrope, Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "next-themes";
-import { mynaruseFlare } from "../src/styles/font";
+import { mynaruseFlare, ambrotype } from "../src/styles/font";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -40,10 +40,10 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} ${manrope.variable} ${mynaruseFlare.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} ${manrope.variable} ${mynaruseFlare.variable} ${ambrotype.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} disableTransitionOnChange
         >
           {children}
         </ThemeProvider>

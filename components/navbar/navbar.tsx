@@ -6,6 +6,7 @@ import Link from "next/link";
 import "@/components/css/main.css";
 import { useTheme } from "next-themes";
 import { Icon } from "@iconify/react";
+import { usePathname } from "next/navigation";
 
 const navLinks = [
   { label: "Home", href: "/" },
@@ -22,6 +23,7 @@ export default function Navbar() {
   const [mounted, setMounted] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
+    const pathname = usePathname();
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -63,6 +65,11 @@ export default function Navbar() {
     setTheme(next);
   };
 
+  const isActiveLink = (href: string) => {
+    if (href === "/") return pathname === "/";
+    return pathname === href || pathname.startsWith(`${href}/`);
+  };
+
   return (
     <nav className="fixed inset-x-0 top-0 z-50 border-b border-[color:var(--ghost-border)] bg-[color:var(--nav-bg)]/80 backdrop-blur-2xl">
       <div className="mx-auto flex w-full max-w-9xl items-center justify-between gap-3 px-4 py-3 sm:px-5 md:px-8">
@@ -86,10 +93,11 @@ export default function Navbar() {
 
         {/* Desktop nav */}
         <div className="hidden items-center gap-8 lg:flex">
-          {navLinks.map((link, index) => {
-            const active = index === 0;
+          {navLinks.map((link) => {
+            const active = isActiveLink(link.href);
+
             return (
-              <a
+              <Link
                 key={link.label}
                 href={link.href}
                 className={`group relative pb-2 text-sm font-semibold transition-all duration-500 ${
@@ -104,7 +112,7 @@ export default function Navbar() {
                     active ? "w-full" : "w-0 group-hover:w-full"
                   }`}
                 />
-              </a>
+              </Link>
             );
           })}
         </div>
@@ -167,7 +175,7 @@ export default function Navbar() {
           <a
             href="/cart"
             aria-label="Cart"
-            className="flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--ghost-border)] bg-[var(--surface-soft)] text-[var(--text-main)] shadow-sm transition-all duration-500 hover:-translate-y-0.5 hover:shadow-md"
+            className="flex h-11 w-11 items-center justify-center bg-transparent rounded-2xl border border-white/0 hover:border-[var(--ghost-border)] hover:bg-[var(--surface-soft)] active:border-[var(--ghost-border)] active:bg-[var(--surface-soft)] text-[var(--brand-primary)] hover:shadow-sm transition-all duration-500 hover:-translate-y-0.5 active:shadow-md"
           >
             <Icon icon="mage:bag-a" width="24" height="24" />
           </a>
@@ -232,8 +240,8 @@ export default function Navbar() {
 
                 {/* Nav links */}
                 <div className="mt-3 space-y-2 rounded-3xl border border-white/10 bg-[var(--surface-soft)]/60 p-3">
-                  {navLinks.map((link, index) => {
-                    const active = index === 0;
+                  {navLinks.map((link) => {
+                    const active = isActiveLink(link.href);
                     return (
                       <a
                         key={link.label}

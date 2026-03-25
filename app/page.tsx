@@ -3,6 +3,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
+
 import "@/components/css/main.css";
 import { useTheme } from "next-themes";
 import { Icon } from "@iconify/react";
@@ -195,9 +196,13 @@ export default function Home() {
   const [username] = useState("Jeff");
 
 
+
+
   const statsView = useInView<HTMLDivElement>(0.3);
 
   const featuredProducts = useMemo(() => products.slice(0, 6), []);
+
+  
 
   return (
     <div className="min-h-screen bg-[var(--page-bg)] text-[var(--text-main)] transition-colors duration-500 overflow-x-hidden font-body">
@@ -207,9 +212,13 @@ export default function Home() {
           <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-[34%] bg-[linear-gradient(180deg,rgba(52,5,141,0.06)_0%,rgba(75,43,163,0.02)_100%)] lg:block" />
           <div className="mx-auto grid max-w-7xl items-center gap-10 lg:grid-cols-12">
             <div className="zoya-reveal zoya-reveal-up lg:col-span-6">
-              <span className="mb-5 inline-flex rounded-full bg-[var(--brand-accent)] px-4 py-2 text-[11px] font-extrabold uppercase tracking-[0.22em] text-[#5b4b00] shadow-[0_12px_30px_rgba(252,223,70,0.24)]">
-                Purely Botanical
+              <div className="mb-5 inline-flex items-center justify-center rounded-full bg-[var(--brand-accent)] px-4 py-2 text-[11px] font-extrabold uppercase tracking-[0.22em] text-[#5b4b00] shadow-[0_12px_30px_rgba(252,223,70,0.24)]">
+                <span className="relative flex mr-2 h-2.5 w-2.5">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#34058d] dark:bg-[#a482ff] opacity-60" />
+                <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-[#34058d] dark:bg-[#a482ff] opacity-70" />
               </span>
+                Purely Botanical
+              </div>
               <h1 className="max-w-xl.5 text-5xl font-extrabold font-headline leading-[1] tracking-[-0.05em] text-[var(--brand-primary)] sm:text-6xl md:text-7xl xl:text-[5.6rem]">
                 Revitalize with <span className="text-[var(--brand-primary-light)] font-zoya">ZOYA</span> Botanicals
               </h1>
@@ -472,7 +481,7 @@ export default function Home() {
               <span className="material-symbols-outlined flex text-5xl text-[#6c5b00] text-center items-center justify-center"><Icon icon="ic:outline-loyalty" width="54" height="54" className="items-center justify-center"/></span>
               <h3 className="mt-6 text-2xl font-extrabold text-[#473600]">Rewards Program</h3>
               <p className="mt-3 text-sm leading-7 text-[#715b00]">Earn petals for every purchase and redeem them for curated gifts.</p>
-              <a href="/rewards" className="mt-6 inline-flex text-sm font-bold underline underline-offset-4 text-[#4c3a00]">
+              <a href="/rewards" className="mt-6 inline-flex text-sm font-bold hover:underline hover:underline-offset-4 text-[#4c3a00]">
                 Learn More
               </a>
             </div>

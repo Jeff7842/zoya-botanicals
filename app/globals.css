@@ -14,6 +14,7 @@
   --font-headline: var(--font-manrope);
   --font-body: var(--font-inter);
   --font-zoya: var(--font-mynaruse-flare);
+  --font-zoya-second: var(--font-ambrotype)
 }
 
 html.light {

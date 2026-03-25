@@ -56,7 +56,7 @@ export default function OurStoryPage() {
 
       <main className="pt-24">
         {/* HERO */}
-        <section className="relative overflow-hidden px-4 py-20 md:px-8 md:py-28">
+        <section id='about'  className="relative overflow-hidden px-4 py-20 md:px-8 md:py-28">
           <div className="mx-auto grid max-w-7xl items-center gap-12 md:grid-cols-12">
             <div className="zoya-reveal zoya-reveal-up md:col-span-7">
               <span className="mb-6 block text-[11px] font-extrabold uppercase tracking-[0.28em] text-[var(--brand-primary-soft)]">
@@ -66,7 +66,7 @@ export default function OurStoryPage() {
               <h1 className="text-5xl font-extrabold leading-[0.92] tracking-[-0.05em] text-[var(--brand-primary)] md:text-7xl xl:text-[5.5rem]">
                 Cultivating
                 <br />
-                <span className="italic text-[var(--brand-accent)]">Radical</span>
+                <span className="italic font-zoya text-[var(--brand-accent)]">Radical</span>
                 <br />
                 Wellness.
               </h1>

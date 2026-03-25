@@ -5,3 +5,9 @@ export const mynaruseFlare = localFont({
   variable: '--font-mynaruse-flare', 
   display: 'swap',
 });
+
+export const ambrotype = localFont({
+  src: '../../public/fonts/ambrotype.ttf', // Relative path to font file
+  variable: '--font-ambrotype', 
+  display: 'swap',
+});

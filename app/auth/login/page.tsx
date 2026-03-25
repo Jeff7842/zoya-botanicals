@@ -221,7 +221,7 @@ export default function ZoyaLoginPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 -mt-4 md:mt-0 md:gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-0 md:mt-0 md:gap-4">
                 <button
                   type="button"
                   className="flex items-center justify-center gap-3 rounded-xl border border-[#cac4d5]/70 bg-white px-4 py-4 text-[1.05rem] font-semibold text-[#1a1c1e] transition-colors duration-200 hover:bg-[#f3f3f6] dark:border-white/10 dark:bg-[#1b1431] dark:text-white dark:hover:bg-[#251b43]"
