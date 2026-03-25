@@ -47,7 +47,7 @@ const reference = generateInquiryReference();
   
 
 
-export function ReceivedPage() {
+export default function ReceivedPage() {
   const searchParams = useSearchParams();
   const reference = searchParams.get("ref") || generateInquiryReference();
   const [toast, setToast] = useState<ToastState>({
@@ -104,7 +104,7 @@ export function ReceivedPage() {
                 <p className="text-[10px] font-extrabold uppercase tracking-[0.24em] text-[var(--text-muted)]">
                   Inquiry Reference
                 </p>
-                <p className="mt-3 text-2xl font-extrabold tracking-[-0.03em] text-[var(--brand-primary)]">
+                <p className="mt-3 text-2xl font-extrabold font-headline tracking-[-0.01em] text-[var(--brand-primary)]">
                   {reference}
                 </p>
               </div>
@@ -126,5 +126,3 @@ export function ReceivedPage() {
     </div>
   );
 }
-
-export default ReceivedPage;
