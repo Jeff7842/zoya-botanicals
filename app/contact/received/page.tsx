@@ -1,19 +1,15 @@
-'use client'
 
 import Link from "next/link";
 import Image from "next/image";
-import { useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { Icon } from "@iconify/react";
 import Navbar from "@/components/navbar/navbar";
 import Footer from "@/components/footer/footer";
 import "@/components/css/main.css";
 import "@/components/css/signup.css";
 
-type ToastState = {
-  show: boolean;
-  title: string;
-  message: string;
+type ReceivedPageProps = {
+  searchParams?: Promise<{
+    ref?: string;
+  }>;
 };
 
 function getIsoWeekday(date: Date) {
@@ -42,21 +38,11 @@ function generateInquiryReference(date = new Date()) {
   return `#${firstLetter}${secondLetter}-${minute}${isoDay}${yearLastDigit}`;
 }
 
-const reference = generateInquiryReference();
-
-  
 
 
-export default function ReceivedPage() {
-  const searchParams = useSearchParams();
-  const reference = searchParams.get("ref") || generateInquiryReference();
-  const [toast, setToast] = useState<ToastState>({
-      show: false,
-      title: "",
-      message: "",
-    });
- const router = useRouter();
-  
+export async function ReceivedPage({ searchParams }: ReceivedPageProps) {
+  const params = await searchParams;
+  const reference = params?.ref || generateInquiryReference();
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-[var(--page-bg)] text-[var(--text-main)] transition-colors duration-500">
