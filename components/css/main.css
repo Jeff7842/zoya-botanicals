@@ -37,6 +37,7 @@ html.dark {
 html {
   scroll-behavior: smooth;
   --font-body: var(--font-inter);
+  --font-zoya: var(--font-mynaruse-flare);
 }
 
 body {
@@ -285,3 +286,23 @@ img {
     transition: none !important;
   }
 }
+
+/* our story page polish */
+.story-glass {
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.story-card-hover {
+  transition: transform 500ms ease, box-shadow 500ms ease, background-color 500ms ease;
+}
+
+.story-card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 24px 55px rgba(52, 5, 141, 0.12);
+}
+
+html.dark .story-card-hover:hover {
+  box-shadow: 0 24px 55px rgba(0, 0, 0, 0.28);
+}
+

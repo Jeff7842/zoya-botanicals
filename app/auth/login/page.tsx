@@ -220,7 +220,7 @@ export default function ZoyaLoginPage() {
               <p className="mt-12 text-center text-[1rem] font-medium text-[#494553] dark:text-[#c9c4d7]">
                 New to the sanctuary?
                 <Link
-                  href="#"
+                  href="/auth/signup"
                   className="ml-2 font-extrabold text-[#34058d] transition-colors duration-200 hover:text-[#4b2ba3] dark:text-[#cdbdff] dark:hover:text-white"
                 >
                   Sign Up

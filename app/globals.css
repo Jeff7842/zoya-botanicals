@@ -13,6 +13,7 @@
   --font-mono: var(--font-geist-mono);
   --font-headline: var(--font-manrope);
   --font-body: var(--font-inter);
+  --font-zoya: var(--font-mynaruse-flare);
 }
 
 html.light {

@@ -10,7 +10,7 @@ import { Icon } from "@iconify/react";
 const navLinks = [
   { label: "Home", href: "#home" },
   { label: "Shop", href: "#shop" },
-  { label: "Our Story", href: "#story" },
+  { label: "Our Story", href: "/our-story" },
   { label: "Benefits", href: "#benefits" },
   { label: "Contact", href: "#footer" },
 ];
@@ -56,15 +56,12 @@ export default function Navbar() {
                 src="/images/zoya/zoya-symbol-dark-2.webp"
                 alt="ZOYA Botanicals logo"
                 fill
-                className="object-cover"
+                className="object-cover "
               />
             </div>
             <div>
-              <p className="text-base font-extrabold tracking-[-0.03em] text-[var(--brand-primary)] transition-all duration-500 group-hover:text-[var(--brand-primary-soft)]">
+              <p className="text-base font-extrabold tracking-[-0.03em] text-[var(--brand-primary)] transition-all duration-500 group-hover:text-[var(--brand-primary-soft)] font-zoya">
                 ZOYA Botanicals
-              </p>
-              <p className="text-[10px] uppercase tracking-[0.32em] text-[var(--text-muted)]">
-                Curated wellness
               </p>
             </div>
           </a>
@@ -136,7 +133,7 @@ export default function Navbar() {
               </a>
             ) : (
               <a
-                href="/login"
+                href="/auth/login"
                 className="ripple-btn rounded-md zoya-outline-btn dark:border-[var(--brand-primary)]"
               >
                 Login
