@@ -19,7 +19,7 @@ const navLinks = [
 export default function Navbar() {
   const [loggedIn] = useState(false);
   const [username] = useState("Jeff");
-  const { theme, setTheme } = useTheme();
+  const { resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
@@ -30,15 +30,6 @@ export default function Navbar() {
     setMounted(true);
   }, []);
 
-  useEffect(() => {
-    const root = document.documentElement;
-    const saved = localStorage.getItem("zoya-theme") as "light" | "dark" | null;
-    const preferred = saved ?? "light";
-
-    root.classList.remove("light", "dark");
-    root.classList.add(preferred);
-    setTheme(preferred);
-  }, [setTheme]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -58,12 +49,9 @@ export default function Navbar() {
   }, [mobileMenuOpen]);
 
   const toggleTheme = () => {
-    const next = theme === "light" ? "dark" : "light";
-    document.documentElement.classList.remove("light", "dark");
-    document.documentElement.classList.add(next);
-    localStorage.setItem("zoya-theme", next);
-    setTheme(next);
-  };
+  if (!mounted) return;
+  setTheme(resolvedTheme === "light" ? "dark" : "light");
+};
 
   const isActiveLink = (href: string) => {
     if (href === "/") return pathname === "/";
@@ -80,6 +68,7 @@ export default function Navbar() {
               src="/images/zoya/zoya-symbol-dark-2.webp"
               alt="ZOYA Botanicals logo"
               fill
+              sizes="(max-width: 768px) 120px, 180px"
               className="object-cover"
             />
           </div>
@@ -128,11 +117,15 @@ export default function Navbar() {
             className="zoya-icon-btn hidden lg:inline-flex"
           >
             <span className="material-symbols-outlined text-[20px]">
-              {mounted && theme === "light" ? (
-                <Icon icon="uil:moon" width="20" height="20" />
-              ) : (
-                <Icon icon="solar:sun-linear" width="20" height="20" />
-              )}
+              {mounted ? (
+  resolvedTheme === "light" ? (
+    <Icon icon="uil:moon" width="20" height="20" />
+  ) : (
+    <Icon icon="solar:sun-linear" width="20" height="20" />
+  )
+) : (
+  <Icon icon="solar:sun-linear" width="20" height="20" />
+)}
             </span>
           </button>
           </div>
@@ -269,11 +262,15 @@ export default function Navbar() {
                   >
                     <div className="flex items-center gap-3">
                       <div className="flex h-10 w-10 p-2 items-center justify-center rounded-2xl bg-[var(--brand-primary)]/10 text-[var(--brand-primary)]">
-                        {mounted && theme === "light" ? (
-                          <Icon icon="uil:moon" width="20" height="20" />
-                        ) : (
-                          <Icon icon="solar:sun-linear" width="20" height="20" />
-                        )}
+                        {mounted ? (
+  resolvedTheme === "light" ? (
+    <Icon icon="uil:moon" width="20" height="20" />
+  ) : (
+    <Icon icon="solar:sun-linear" width="20" height="20" />
+  )
+) : (
+  <Icon icon="solar:sun-linear" width="20" height="20" />
+)}
                       </div>
                       <div className="text-left">
                         <p className="font-bold">Appearance</p>
@@ -283,7 +280,7 @@ export default function Navbar() {
                       </div>
                     </div>
                     <div className="rounded-full border border-[var(--ghost-border)] px-3 py-1 text-xs font-bold text-[var(--brand-primary)]">
-                      {theme === "light" ? "Light" : "Dark"}
+                      {mounted ? (resolvedTheme === "light" ? "Light" : "Dark") : "Theme"}
                     </div>
                   </button>
                 </div>

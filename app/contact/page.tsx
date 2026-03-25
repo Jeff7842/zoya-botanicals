@@ -277,7 +277,7 @@ function ContactSidebar() {
     <div className="zoya-reveal zoya-reveal-left space-y-10">
       <div>
         <h2 className="text-3xl font-extrabold tracking-[-0.04em] text-[var(--brand-primary)]">
-          Connect with <span className="text-(--brand-primary-light) font-zoya">our</span>  Studio
+          Connect with <span className="text-(--brand-primary-light) text-4xl italic font-zoya-second tracking-wide">our</span>  Studio
         </h2>
       </div>
 

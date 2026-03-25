@@ -106,7 +106,7 @@ export default function OurStoryPage() {
           <div className="mx-auto max-w-7xl">
             <div className="mb-14">
               <h2 className="text-4xl font-extrabold tracking-[-0.04em] text-[var(--brand-primary)] md:text-6xl">
-                The Source
+                The <span className="text-(--brand-primary-light) italic font-zoya-second tracking-wide">Source</span>
               </h2>
               <div className="mt-4 h-1 w-24 rounded-full bg-[var(--brand-accent)]" />
             </div>
@@ -243,7 +243,7 @@ export default function OurStoryPage() {
               <h2 className="text-4xl font-extrabold leading-[0.95] tracking-[-0.04em] text-[var(--brand-primary)] md:text-6xl">
                 Clinical
                 <br />
-                By Nature.
+                By <span className="text-(--brand-primary-light) italic font-zoya-second tracking-wide">Nature.</span>
               </h2>
 
               <p className="mt-7 text-base leading-8 text-[var(--text-muted)] md:text-lg">
@@ -310,7 +310,7 @@ export default function OurStoryPage() {
                   Refined Testimonials
                 </span>
                 <h2 className="text-4xl font-extrabold tracking-[-0.04em] text-[var(--brand-primary)] md:text-6xl">
-                  What Our Curators Say
+                  What Our <span className="text-(--brand-primary-light) italic font-zoya-second tracking-wide">Curators</span> Say
                 </h2>
               </div>
 

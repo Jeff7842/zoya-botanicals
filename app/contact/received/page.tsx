@@ -60,6 +60,7 @@ export default async function ReceivedPage({ searchParams }: ReceivedPageProps) 
                 src="/images/zoya/ingredeents-shot.png"
                 alt="Botanical product arrangement"
                 fill
+                sizes="(max-width: 768px) 120px, 180px"
                 className="object-cover transition-all duration-700 hover:scale-[1.03]"
                 priority
               />
@@ -77,7 +78,7 @@ export default async function ReceivedPage({ searchParams }: ReceivedPageProps) 
             </div>
 
             <h1 className="mt-6 max-w-xl text-5xl font-extrabold leading-[0.94] tracking-[-0.06em] text-[var(--brand-primary)] md:text-6xl lg:text-[5rem]">
-              Your Message is <span className="text-(--brand-primary-light) font-zoya-second">Blooming.</span>
+              Your Message is <span className="text-(--brand-primary-light) font-zoya-second tracking-wide">Blooming.</span>
             </h1>
 
             <p className="mt-6 max-w-xl text-lg leading-9 text-[var(--text-muted)]">

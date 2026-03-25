@@ -36,6 +36,7 @@ html.dark {
 
 html {
   scroll-behavior: smooth;
+  data-scroll-behavior: smooth;
   --font-body: var(--font-inter);
   --font-zoya: var(--font-mynaruse-flare);
 }
