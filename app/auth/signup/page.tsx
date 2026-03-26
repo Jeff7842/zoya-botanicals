@@ -8,6 +8,7 @@ import { Icon } from "@iconify/react";
 import "@/components/css/main.css";
 import "@/components/css/signup.css";
 import { useTheme } from "next-themes";
+import { useToast } from "@/components/toast/toast-provider";
 
 declare global {
   interface Window {
@@ -40,7 +41,7 @@ type PasswordRule = {
 };
 
 const TURNSTILE_SITE_KEY =
-  process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY ?? "";
+  process.env.TURNSTILE_SITE_KEY ?? "";
 
 export default function ZoyaSignupPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -222,6 +223,8 @@ export default function ZoyaSignupPage() {
 
   const passwordStarted = form.password.length > 0;
   const passwordValid = passwordRules.every((rule) => rule.passed);
+  const isTurnstileDisabled =
+  process.env.NEXT_PUBLIC_DISABLE_TURNSTILE === "true";
   const passwordsMatch =
     form.confirmPassword.length > 0 && form.password === form.confirmPassword;
 
@@ -236,7 +239,7 @@ export default function ZoyaSignupPage() {
     passwordsMatch &&
     form.isAdult &&
     form.acceptsTerms &&
-    !!turnstileToken;
+   (isTurnstileDisabled || Boolean(turnstileToken));
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
@@ -308,19 +311,55 @@ export default function ZoyaSignupPage() {
     return () => clearTimeout(timeout);
   }, [mounted, resolvedTheme]);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const { showToast } = useToast();
 
-    if (!canSubmit) {
-      return;
-    }
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  e.preventDefault();
 
-    console.log("Signup payload", {
-      ...form,
-      phoneNumber: `${form.dialCode}${form.phone}`,
-      turnstileToken,
+  if (!canSubmit) return;
+
+  
+
+  const res = await fetch("/api/auth/signup", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      firstName: form.firstName,
+      lastName: form.lastName,
+      email: form.email,
+      phone: `${form.dialCode}${form.phone}`,
+      country: form.country,
+      city: form.city,
+      password: form.password,
+      turnstileToken: isTurnstileDisabled ? null : turnstileToken,
+    }),
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    showToast({
+      title: "Signup failed",
+      message: data.error ?? "We could not create your account. Please try again.",
+      variant: "error",
+      duration: 5000,
     });
-  };
+    return;
+  }
+
+  showToast({
+    title: "Verification email sent",
+    message: "Your account was created successfully. Please verify your email.",
+    variant: "success",
+    duration: 5500,
+  });
+
+  setTimeout(() => {
+    window.location.href = "/auth/verify-pending";
+  }, 900);
+};
 
   return (
     <>
@@ -618,7 +657,7 @@ export default function ZoyaSignupPage() {
                     />
                   </div>
 
-                  <div className="hidden rounded-xl border border-[#cac4d5]/55 bg-white/80 p-4 dark:border-white/10 dark:bg-[#1b1431]">
+                  {/*<div className="hidden rounded-xl border border-[#cac4d5]/55 bg-white/80 p-4 dark:border-white/10 dark:bg-[#1b1431]">
                     <p className="mb-3 text-[0.78rem] font-extrabold uppercase tracking-[0.18em] text-[#6d6778] dark:text-[#b7b1c5]">
                       Security Verification
                     </p>
@@ -630,7 +669,7 @@ export default function ZoyaSignupPage() {
                         Add <span className="font-bold">NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY</span> to render Turnstile.
                       </div>
                     )}
-                  </div>
+                  </div>*/}
 
                   <div className="rounded-0 border border-[#cac4d5]/0 bg-white/0 p-0 dark:border-white/0 dark:bg-[#1b143100]">
                     {TURNSTILE_SITE_KEY ? (
@@ -708,6 +747,7 @@ export default function ZoyaSignupPage() {
                 src="/images/background/login.png"
                 alt="Botanical background"
                 fill
+                sizes="100vh"
                 priority
                 className="h-full w-full object-cover"
               />

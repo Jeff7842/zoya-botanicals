@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Manrope, Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "next-themes";
 import { mynaruseFlare, ambrotype } from "../src/styles/font";
+import { ToastProvider } from "@/components/toast/toast-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -46,7 +47,9 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} disableTransitionOnChange
         >
+          <ToastProvider>
           {children}
+          </ToastProvider>
         </ThemeProvider>
       </body>
     </html>

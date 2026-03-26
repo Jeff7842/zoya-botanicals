@@ -39,19 +39,7 @@ export default function ZoyaLoginPage() {
       setTheme(next);
     };
 
-    // Render a stable fallback during SSR + first client render
-  if (!mounted) {
-    return (
-      <Image
-        src="/images/zoya/zoya-symbol-yellow-2.webp"
-        alt="ZOYA Botanicals"
-        width={42}
-        height={42}
-        className="h-20 w-20 object-contain"
-        priority
-      />
-    );
-  }
+    // Render a stable fallback during SSR + first client rende
 
   const logoSrc =
     resolvedTheme === "dark"
