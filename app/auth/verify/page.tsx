@@ -1,11 +1,15 @@
-"use client";
-
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 
-export default function VerifiedUserPage() {
-  const params = useSearchParams();
-  const status = params.get("status");
+type VerifyPageProps = {
+  searchParams: Promise<{
+    status?: string;
+  }>;
+};
+
+export default async function VerifiedUserPage({
+  searchParams,
+}: VerifyPageProps) {
+  const { status } = await searchParams;
 
   const copy =
     status === "success"
