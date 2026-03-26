@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Icon } from "@iconify/react";
 import "@/components/css/main.css";
 import "@/components/css/signup.css"
@@ -25,7 +27,29 @@ const supportCards = [
   },
 ];
 
-export default function VerifyPendingPage() {
+
+
+export default  function VerifyPendingPage() {
+    const [isAllowed, setIsAllowed] = useState(false);
+
+  const router = useRouter();
+
+  useEffect(() => {
+  const hasPendingAccess = document.cookie
+    .split("; ")
+    .some((cookie) => cookie === "zoya_verify_pending_access=granted");
+
+  if (!hasPendingAccess) {
+    router.replace("/403");
+    return;
+  }
+
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  setIsAllowed(true);
+}, [router]);
+
+if (!isAllowed) return null;
+
   return (
     <div className="min-h-screen overflow-x-hidden bg-[var(--page-bg)] text-[var(--text-main)] transition-colors duration-500 font-body">
       <Navbar />

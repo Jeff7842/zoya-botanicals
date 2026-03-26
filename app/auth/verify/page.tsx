@@ -4,12 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Icon } from "@iconify/react";
 import { useTheme } from "next-themes";
-
-type VerifyPageProps = {
-  searchParams?: {
-    status?: string;
-  };
-};
+import { useSearchParams } from "next/navigation";
 
 type StatusKey =
   | "success"
@@ -29,25 +24,25 @@ type StatusConfig = {
   iconClass: string;
 };
 
-export default function VerifiedUserPage({
-  searchParams,
-}: VerifyPageProps) {
+export default function VerifiedUserPage() {
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
+  const searchParams = useSearchParams();
 
-  const rawStatus = (searchParams?.status ?? "failed").toLowerCase() as StatusKey;
+  const statusParam = searchParams.get("status");
+  const rawStatus = ((statusParam ?? "failed").toLowerCase()) as StatusKey;
 
   const statusMap: Record<StatusKey, StatusConfig> = {
     success: {
-  title: "Account verified",
-  text: "Your email has been verified successfully. You can now log in.",
-  actionLabel: "Go to login",
-  actionHref: "/auth/login",
-  icon: "material-symbols:verified-user-rounded",
-  iconWrapClass:
-    "bg-[#dcefdc] text-[#235c38] shadow-[0_18px_40px_rgba(35,92,56,0.18)] dark:bg-[#193524] dark:text-[#8fd6a8]",
-  iconClass: "text-current",
-},
+      title: "Account verified",
+      text: "Your email has been verified successfully. You can now log in.",
+      actionLabel: "Go to login",
+      actionHref: "/auth/login",
+      icon: "material-symbols:verified-user-rounded",
+      iconWrapClass:
+        "bg-[#dcefdc] text-[#235c38] shadow-[0_18px_40px_rgba(35,92,56,0.18)] dark:bg-[#193524] dark:text-[#8fd6a8]",
+      iconClass: "text-current",
+    },
     expired: {
       title: "Verification link expired",
       text: "This verification link has expired. Request a new one to continue securing your account.",
@@ -82,7 +77,7 @@ export default function VerifiedUserPage({
       title: "Verification failed",
       text: "Something went wrong while verifying your account. Please try again in a moment.",
       actionLabel: "Try again",
-      actionHref: "/auth/login",
+      actionHref: "/contact",
       icon: "material-symbols:error-rounded",
       iconWrapClass:
         "bg-[#ffdad6] text-[#ba1a1a] shadow-[0_18px_40px_rgba(186,26,26,0.12)] dark:bg-[#3b1717] dark:text-[#ffb4ab]",
@@ -92,7 +87,7 @@ export default function VerifiedUserPage({
       title: "Verification failed",
       text: "Something went wrong while verifying your account. Please try again in a moment.",
       actionLabel: "Try again",
-      actionHref: "/auth/login",
+      actionHref: "/auth/signup",
       icon: "material-symbols:error-rounded",
       iconWrapClass:
         "bg-[#ffdad6] text-[#ba1a1a] shadow-[0_18px_40px_rgba(186,26,26,0.12)] dark:bg-[#3b1717] dark:text-[#ffb4ab]",

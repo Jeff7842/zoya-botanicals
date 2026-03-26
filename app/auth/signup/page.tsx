@@ -10,6 +10,7 @@ import "@/components/css/signup.css";
 import { useTheme } from "next-themes";
 import { useToast } from "@/components/toast/toast-provider";
 
+
 declare global {
   interface Window {
     turnstile?: {
@@ -43,10 +44,13 @@ type PasswordRule = {
 const TURNSTILE_SITE_KEY =
   process.env.TURNSTILE_SITE_KEY ?? "";
 
+
+
 export default function ZoyaSignupPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { theme, setTheme, resolvedTheme } = useTheme();
 
@@ -54,6 +58,8 @@ export default function ZoyaSignupPage() {
   const [cities, setCities] = useState<string[]>([]);
   const [countryLoading, setCountryLoading] = useState(true);
   const [cityLoading, setCityLoading] = useState(false);
+
+
 
   const [form, setForm] = useState({
     firstName: "",
@@ -316,54 +322,59 @@ export default function ZoyaSignupPage() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
   e.preventDefault();
 
-  if (!canSubmit) return;
+  if (!canSubmit || isSubmitting) return;
 
-  
+  setIsSubmitting(true);
 
-  const res = await fetch("/api/auth/signup", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      firstName: form.firstName,
-      lastName: form.lastName,
-      email: form.email,
-      phone: `${form.dialCode}${form.phone}`,
-      country: form.country,
-      city: form.city,
-      password: form.password,
-      turnstileToken: isTurnstileDisabled ? null : turnstileToken,
-    }),
-  });
-
-  const data = await res.json();
-
-  if (!res.ok) {
-    showToast({
-      title: "Signup failed",
-      message: data.error ?? "We could not create your account. Please try again.",
-      variant: "error",
-      duration: 5000,
+  try {
+    const res = await fetch("/api/auth/signup", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        firstName: form.firstName,
+        lastName: form.lastName,
+        email: form.email,
+        phone: `${form.dialCode}${form.phone}`,
+        country: form.country,
+        city: form.city,
+        password: form.password,
+        turnstileToken: isTurnstileDisabled ? null : turnstileToken,
+      }),
     });
-    return;
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      showToast({
+        title: "Signup failed",
+        message: data.error ?? "We could not create your account. Please try again.",
+        variant: "error",
+        duration: 5000,
+      });
+      return;
+    }
+
+    showToast({
+      title: "Verification email sent",
+      message: "Your account was created successfully. Please verify your email.",
+      variant: "success",
+      duration: 5500,
+    });
+
+    document.cookie =
+      "zoya_verify_pending_access=granted; path=/; max-age=900; samesite=lax";
+
+    setTimeout(() => {
+      window.location.href = "/auth/signup/verify-pending";
+    }, 900);
+  } finally {
+    setIsSubmitting(false);
   }
-
-  showToast({
-    title: "Verification email sent",
-    message: "Your account was created successfully. Please verify your email.",
-    variant: "success",
-    duration: 5500,
-  });
-
-  // short-lived route-access cookie for verify-pending
-document.cookie =
-  "zoya_verify_pending_access=granted; path=/; max-age=900; samesite=lax";
-
-setTimeout(() => {
-  window.location.href = "/auth/signup/verify-pending";
-}, 900);
 };
+
+
 
   return (
     <>
@@ -688,13 +699,21 @@ setTimeout(() => {
                   <div className="flex justify-center">
   <button
     type="submit"
-    disabled={!canSubmit}
-    className="w-full md:max-w-[75%] lg:max-w-[75%] rounded-xl bg-[#34058d] px-6 py-4 text-[1.08rem] font-extrabold tracking-[0.02em] text-white shadow-[0_20px_40px_rgba(52,5,141,0.18)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#4b2ba3] disabled:cursor-not-allowed disabled:opacity-55"
+    disabled={!canSubmit || isSubmitting}
+    className={`w-full md:max-w-[75%] lg:max-w-[75%] rounded-xl px-6 py-4 text-[1.08rem] font-extrabold tracking-[0.02em] text-white shadow-[0_20px_40px_rgba(52,5,141,0.18)] transition-all duration-300 ${
+      !canSubmit || isSubmitting
+        ? "cursor-not-allowed bg-[#8f88a3] opacity-70"
+        : "bg-[#34058d] hover:-translate-y-0.5 hover:bg-[#4b2ba3]"
+    }`}
   >
-   { canSubmit ?  (<span className="inline-flex items-center gap-3">
-    <div className="size-4 animate-spin rounded-full border-2 border-white/90 border-t-transparent" />
-    <span>Just A sec...</span>
-  </span>) : "Create Account" }
+    {isSubmitting ? (
+      <span className="inline-flex items-center gap-3">
+        <div className="size-4 animate-spin rounded-full border-2 border-white/90 border-t-transparent" />
+        <span>Just A sec...</span>
+      </span>
+    ) : (
+      "Create Account"
+    )}
   </button>
 </div>
                 </form>
@@ -970,3 +989,5 @@ function CheckboxField({
     </div>
   );
 }
+
+
