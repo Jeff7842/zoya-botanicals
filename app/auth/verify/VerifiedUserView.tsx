@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Icon } from "@iconify/react";
 import { useTheme } from "next-themes";
+import CleanVerifyUrl from "./CleanVerifyUrl";
 
 type StatusKey =
   | "success"
@@ -12,6 +13,16 @@ type StatusKey =
   | "timeout"
   | "error"
   | "failed";
+
+  const VERIFY_STATUS_CODES = {
+  success: "K9X2M4Q7L8NP",
+  expired: "T4B8W1C6R2YM",
+  invalid: "N7D3P5H9Q1ZX",
+  timeout: "F2J8L4S6V0KD",
+  error: "R6M1X9A3T7QC",
+  failed: "Y5P2E8U4B1HN",
+} as const;
+
 
 type StatusConfig = {
   title: string;
@@ -93,6 +104,8 @@ export default function VerifiedUserView({ status }: { status: StatusKey }) {
   const content = statusMap[status] ?? statusMap.failed;
 
   return (
+    <>
+    <CleanVerifyUrl />
     <main className="relative flex min-h-screen flex-col overflow-hidden bg-[var(--page-bg)] text-[var(--text-main)] transition-colors duration-500">
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(231,222,255,0.55)_0%,transparent_32%),radial-gradient(circle_at_bottom_left,rgba(252,223,70,0.09)_0%,transparent_24%)] dark:bg-[radial-gradient(circle_at_top_right,rgba(164,130,255,0.14)_0%,transparent_32%),radial-gradient(circle_at_bottom_left,rgba(252,223,70,0.05)_0%,transparent_24%)]" />
@@ -217,5 +230,6 @@ export default function VerifiedUserView({ status }: { status: StatusKey }) {
         </p>
       </footer>
     </main>
+    </>
   );
 }

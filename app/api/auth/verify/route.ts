@@ -1,6 +1,78 @@
+import crypto from "crypto";
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/supabase";
 import { sha256 } from "@/lib/auth-utilis";
+
+type VerifyStatus =
+  | "success"
+  | "expired"
+  | "invalid"
+  | "timeout"
+  | "error"
+  | "failed";
+
+function generateMixedCaseToken(length = 64) {
+  const chars =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  const bytes = crypto.randomBytes(length);
+  let result = "";
+
+  for (let i = 0; i < length; i++) {
+    result += chars[bytes[i] % chars.length];
+  }
+
+  return result;
+}
+
+async function createVerifyStateToken({
+  status,
+  userId,
+  email,
+}: {
+  status: VerifyStatus;
+  userId?: string | null;
+  email?: string | null;
+}) {
+  const rawToken = generateMixedCaseToken(64);
+  const tokenHash = sha256(rawToken);
+
+  const { error } = await supabaseAdmin
+    .schema("private")
+    .from("verify_state_tokens")
+    .insert({
+      token_hash: tokenHash,
+      status,
+      user_id: userId ?? null,
+      email: email ?? null,
+      expires_at: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
+    });
+
+  if (error) {
+    throw error;
+  }
+
+  return rawToken;
+}
+
+async function redirectWithVerifyToken({
+  status,
+  userId,
+  email,
+}: {
+  status: VerifyStatus;
+  userId?: string | null;
+  email?: string | null;
+}) {
+  const verifyToken = await createVerifyStateToken({
+    status,
+    userId,
+    email,
+  });
+
+  return NextResponse.redirect(
+    `${process.env.APP_URL}/auth/verify?v=${encodeURIComponent(verifyToken)}`
+  );
+}
 
 export async function GET(req: Request) {
   try {
@@ -9,7 +81,7 @@ export async function GET(req: Request) {
     const uid = searchParams.get("uid");
 
     if (!token || !uid) {
-      return NextResponse.redirect(`${process.env.APP_URL}/auth/verify?status=invalid`);
+      return redirectWithVerifyToken({ status: "invalid", userId: uid });
     }
 
     const tokenHash = sha256(token);
@@ -24,17 +96,16 @@ export async function GET(req: Request) {
       .maybeSingle();
 
     if (sessionError || !session) {
-      return NextResponse.redirect(`${process.env.APP_URL}/auth/verify?status=invalid`);
+      return redirectWithVerifyToken({ status: "invalid", userId: uid });
     }
 
     const now = new Date();
     const expiresAt = new Date(session.expires_at);
 
     if (session.revoked_at || expiresAt <= now) {
-      return NextResponse.redirect(`${process.env.APP_URL}/auth/verify?status=expired`);
+      return redirectWithVerifyToken({ status: "expired", userId: uid });
     }
 
-    // mark app user verified
     const { error: updateUserError } = await supabaseAdmin
       .schema("private")
       .from("users")
@@ -45,19 +116,29 @@ export async function GET(req: Request) {
       .eq("id", uid);
 
     if (updateUserError) {
-      return NextResponse.redirect(`${process.env.APP_URL}/auth/verify?status=failed`);
+      return redirectWithVerifyToken({ status: "failed", userId: uid });
     }
 
-    // confirm auth email too
-    const { error: authUpdateError } = await supabaseAdmin.auth.admin.updateUserById(uid, {
-      email_confirm: true,
-    });
+    const { data: userRow } = await supabaseAdmin
+      .schema("private")
+      .from("users")
+      .select("email")
+      .eq("id", uid)
+      .maybeSingle();
+
+    const { error: authUpdateError } =
+      await supabaseAdmin.auth.admin.updateUserById(uid, {
+        email_confirm: true,
+      });
 
     if (authUpdateError) {
-      return NextResponse.redirect(`${process.env.APP_URL}/auth/verify?status=failed`);
+      return redirectWithVerifyToken({
+        status: "failed",
+        userId: uid,
+        email: userRow?.email ?? null,
+      });
     }
 
-    // immediately end the first verification session
     await supabaseAdmin
       .schema("private")
       .from("sessions")
@@ -69,9 +150,13 @@ export async function GET(req: Request) {
       })
       .eq("id", session.id);
 
-    return NextResponse.redirect(`${process.env.APP_URL}/auth/verify?status=success`);
+    return redirectWithVerifyToken({
+      status: "success",
+      userId: uid,
+      email: userRow?.email ?? null,
+    });
   } catch (error) {
     console.error("verify error", error);
-    return NextResponse.redirect(`${process.env.APP_URL}/auth/verify?status=failed`);
+    return redirectWithVerifyToken({ status: "failed" });
   }
 }
