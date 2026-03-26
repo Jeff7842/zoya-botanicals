@@ -17,13 +17,15 @@ const navLinks = [
 ];
 
 export default function Navbar() {
-  const [loggedIn] = useState(false);
-  const [username] = useState("Jeff");
+  const [loggedIn, setLoggedIn] = useState(false);
+const [username, setUsername] = useState("");
   const { resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
     const pathname = usePathname();
+    const [logoutModalOpen, setLogoutModalOpen] = useState(false);
+const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -58,24 +60,88 @@ export default function Navbar() {
     return pathname === href || pathname.startsWith(`${href}/`);
   };
 
+  useEffect(() => {
+  let active = true;
+
+  const loadUser = async () => {
+    try {
+      const res = await fetch("/api/auth/me", {
+        method: "GET",
+        credentials: "include",
+      });
+
+      const data = await res.json();
+
+      if (!active) return;
+
+      if (data.authenticated && data.user) {
+        setLoggedIn(true);
+        setUsername(data.user.username ?? data.user.first_name ?? "Account");
+      } else {
+        setLoggedIn(false);
+        setUsername("");
+      }
+    } catch {
+      if (!active) return;
+      setLoggedIn(false);
+      setUsername("");
+    }
+  };
+
+  loadUser();
+
+  return () => {
+    active = false;
+  };
+}, []);
+
+const handleLogout = async () => {
+  try {
+    setIsLoggingOut(true);
+
+    await fetch("/api/auth/logout", {
+      method: "POST",
+      credentials: "include",
+    });
+
+    setLogoutModalOpen(false);
+    setMobileMenuOpen(false);
+    window.location.href = "/";
+  } finally {
+    setIsLoggingOut(false);
+  }
+};
+
+useEffect(() => {
+  if (!logoutModalOpen) return;
+
+  const originalOverflow = document.body.style.overflow;
+  document.body.style.overflow = "hidden";
+
+  return () => {
+    document.body.style.overflow = originalOverflow;
+  };
+}, [logoutModalOpen]);
+
   return (
+    <>
     <nav className="fixed inset-x-0 top-0 z-50 border-b border-[color:var(--ghost-border)] bg-[color:var(--nav-bg)]/80 backdrop-blur-2xl">
       <div className="mx-auto flex w-full max-w-9xl items-center justify-between gap-3 px-4 py-3 sm:px-5 md:px-8">
         {/* Logo */}
         <Link href="/" className="group flex min-w-0 items-center gap-3">
-          <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-2xl bg-[#f5d71d] p-1 shadow-[0_12px_30px_rgba(52,5,141,0.14)] transition-transform duration-500 group-hover:scale-105 sm:h-11 sm:w-11">
+          <div className=" h-auto w-5 shrink-0  transition-transform duration-500 group-hover:scale-105 sm:w-5">
             <Image
-              src="/images/zoya/zoya-symbol-dark-2.webp"
+              src={ resolvedTheme ? '/images/zoya/zoya-symbol-yellow.webp' :'/images/zoya/zoya-symbol-dark-2.webp' }
               alt="ZOYA Botanicals logo"
-              fill
-              sizes="(max-width: 768px) 120px, 180px"
-              className="object-cover"
+              width={1000}
+              height={1000}
+              className=""
             />
           </div>
 
           <div className="min-w-0">
-            <p className="truncate text-sm font-extrabold tracking-[-0.03em] text-[var(--brand-primary)] transition-all duration-500 group-hover:text-[var(--brand-primary-soft)] font-zoya sm:text-base">
-              ZOYA Botanicals
+            <p className="truncate text-sm font-extrabold align-bottom justify-baseline tracking-[-0.03em] leading-[0.92] text-[var(--brand-primary)] transition-all duration-500 group-hover:text-[var(--brand-primary-soft)] font-zoya sm:text-base">
+              ZOYA <br/> <span className="text-[0.8rem] -mt-5 tracking-normal">BOTANICALS</span>
             </p>
           </div>
         </Link>
@@ -145,16 +211,23 @@ export default function Navbar() {
           {/* Desktop login/profile */}
           <div className="hidden md:flex">
             {loggedIn ? (
-              <a
-                href="/account"
-                className="flex items-center gap-2 rounded-2xl border border-[var(--ghost-border)] bg-[var(--surface-soft)] px-3 py-2 text-[var(--brand-primary)] shadow-sm transition-all duration-500 hover:scale-105 hover:shadow-md"
-              >
-                <span className="text-[20px]">
-                  <Icon icon="solar:user-outline" width="20" height="20" />
-                </span>
-                <span className="text-sm font-semibold">{username}</span>
-              </a>
-            ) : (
+              
+    <a
+      href="/account"
+      className="flex items-center gap-3 rounded-2xl border border-[var(--ghost-border)] bg-[var(--surface-soft)] px-3 py-2 text-[var(--brand-primary)] shadow-sm transition-all duration-500 hover:scale-105 hover:shadow-md"
+    >
+      <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[var(--brand-primary)]/10 text-[var(--brand-primary)]">
+        <Icon icon="solar:user-outline" width="20" height="20" />
+      </span>
+
+      <span className="flex flex-col leading-tight">
+        <span className="text-sm font-semibold">Account</span>
+        <span className="text-[11px] font-medium text-[var(--text-muted)]">
+          {username}
+        </span>
+      </span>
+    </a>
+  ) : (
               <a
                 href="/auth/login"
                 className="ripple-btn rounded-xl zoya-outline-btn px-4 py-2 dark:border-[var(--brand-primary)]"
@@ -175,14 +248,14 @@ export default function Navbar() {
 
           {/* Mobile user icon: between cart and menu */}
           {loggedIn && (
-            <a
-              href="/account"
-              aria-label="Account"
-              className="flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--ghost-border)] bg-[var(--surface-soft)] text-[var(--brand-primary)] shadow-sm transition-all duration-500 hover:-translate-y-0.5 hover:shadow-md md:hidden"
-            >
-              <Icon icon="solar:user-outline" width="22" height="22" />
-            </a>
-          )}
+  <a
+    href="/account"
+    aria-label="Account"
+    className="flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--ghost-border)] bg-[var(--surface-soft)] text-[var(--brand-primary)] shadow-sm transition-all duration-500 hover:-translate-y-0.5 hover:shadow-md md:hidden"
+  >
+    <Icon icon="solar:user-outline" width="22" height="22" />
+  </a>
+)}
 
           {/* Mobile menu button */}
           <div className="relative lg:hidden" ref={menuRef}>
@@ -296,6 +369,7 @@ export default function Navbar() {
                       <Icon icon="solar:login-2-linear" width="20" height="20" />
                     </a>
                   ) : (
+                    <div className="space-y-3">
                     <a
                       href="/account"
                       onClick={() => setMobileMenuOpen(false)}
@@ -312,6 +386,16 @@ export default function Navbar() {
                       </div>
                       <Icon icon="solar:alt-arrow-right-linear" width="18" height="18" />
                     </a>
+
+                    <button
+  type="button"
+  onClick={() => setLogoutModalOpen(true)}
+  className="flex w-full items-center justify-center gap-2 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-[0.95rem] font-semibold text-red-600 transition-all duration-500 hover:-translate-y-0.5 hover:bg-red-100 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-300 dark:hover:bg-red-500/15"
+>
+      <Icon icon="solar:logout-2-outline" width="18" height="18" />
+      <span>Log out</span>
+    </button>
+    </div>
                   )}
                 </div>
                 
@@ -320,6 +404,62 @@ export default function Navbar() {
           </div>
         </div>
       </div>
+
+      
     </nav>
+
+    {logoutModalOpen && (
+  <div className="fixed inset-0 z-[120] flex items-center justify-center px-4">
+    <button
+      type="button"
+      aria-label="Close logout confirmation"
+      className="absolute inset-0 bg-[#14072f]/55 backdrop-blur-[6px]"
+      onClick={() => !isLoggingOut && setLogoutModalOpen(false)}
+    />
+
+    <div className="relative z-[121] w-full max-w-md overflow-hidden rounded-[2rem] border border-[var(--ghost-border)] bg-[var(--surface-card)] shadow-[0_30px_90px_rgba(24,7,55,0.24)]">
+      <div className="p-6 sm:p-7">
+        <div className="flex items-start gap-4">
+          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[1.4rem] bg-red-50 text-red-600 shadow-[0_10px_30px_rgba(220,38,38,0.12)] dark:bg-red-500/10 dark:text-red-300">
+            <Icon icon="solar:logout-2-outline" width="24" height="24" />
+          </div>
+
+          <div className="min-w-0 flex-1">
+            <h3 className="text-[1.15rem] font-extrabold tracking-[-0.02em] text-[var(--text-primary)]">
+              Confirm logout
+            </h3>
+            <p className="mt-2 text-[0.96rem] leading-7 text-[var(--text-muted)]">
+              Are you sure you want to log out of your curator account on this device?
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <button
+            type="button"
+            onClick={() => setLogoutModalOpen(false)}
+            disabled={isLoggingOut}
+            className="inline-flex items-center justify-center rounded-2xl bg-red-500 px-4 py-3 text-[0.95rem] font-semibold text-white transition-all duration-500 hover:-translate-y-0.5 hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            Cancel
+          </button>
+
+          <button
+            type="button"
+            onClick={handleLogout}
+            disabled={isLoggingOut}
+            className="inline-flex items-center justify-center rounded-2xl bg-[var(--brand-primary)] px-4 py-3 text-[0.95rem] font-semibold text-white shadow-[0_16px_34px_rgba(52,5,141,0.18)] transition-all duration-500 hover:-translate-y-0.5 hover:shadow-[0_20px_40px_rgba(52,5,141,0.24)] disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isLoggingOut ? "Logging out..." : "Accept"}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
+   </>
+    
   );
+
+  
 }

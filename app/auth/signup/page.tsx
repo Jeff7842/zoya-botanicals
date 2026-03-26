@@ -356,9 +356,13 @@ export default function ZoyaSignupPage() {
     duration: 5500,
   });
 
-  setTimeout(() => {
-    window.location.href = "/auth/verify-pending";
-  }, 900);
+  // short-lived route-access cookie for verify-pending
+document.cookie =
+  "zoya_verify_pending_access=granted; path=/; max-age=900; samesite=lax";
+
+setTimeout(() => {
+  window.location.href = "/auth/signup/verify-pending";
+}, 900);
 };
 
   return (
@@ -687,7 +691,10 @@ export default function ZoyaSignupPage() {
     disabled={!canSubmit}
     className="w-full md:max-w-[75%] lg:max-w-[75%] rounded-xl bg-[#34058d] px-6 py-4 text-[1.08rem] font-extrabold tracking-[0.02em] text-white shadow-[0_20px_40px_rgba(52,5,141,0.18)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#4b2ba3] disabled:cursor-not-allowed disabled:opacity-55"
   >
-    Create Account
+   { canSubmit ?  (<span className="inline-flex items-center gap-3">
+    <div className="size-4 animate-spin rounded-full border-2 border-white/90 border-t-transparent" />
+    <span>Just A sec...</span>
+  </span>) : "Create Account" }
   </button>
 </div>
                 </form>

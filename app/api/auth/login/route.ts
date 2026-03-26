@@ -10,6 +10,32 @@ type LoginBody = {
   turnstileToken: string;
 };
 
+const MAX_ATTEMPTS_PER_MINUTE = 10;
+const MAX_ATTEMPTS_PER_FIVE_MINUTES = 15;
+const FAILED_ATTEMPTS_BEFORE_COOLDOWN = 10;
+const FAILED_COOLDOWN_SECONDS = 60;
+
+function secondsUntil(date: Date) {
+  return Math.max(1, Math.ceil((date.getTime() - Date.now()) / 1000));
+}
+
+async function recordLoginAttempt(params: {
+  email: string;
+  ip: string;
+  userAgent: string;
+  success: boolean;
+}) {
+  const { email, ip, userAgent, success } = params;
+
+  await supabaseAdmin.schema("private").from("login_attempts").insert({
+    email,
+    ip_address: ip,
+    user_agent: userAgent,
+    success,
+    attempted_at: new Date().toISOString(),
+  });
+}
+
 export async function POST(req: Request) {
   try {
     const body = (await req.json()) as LoginBody;
@@ -21,8 +47,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing credentials." }, { status: 400 });
     }
 
-    const ip = getIpAddress(req);
-    const userAgent = getUserAgent(req);
+    const ip = getIpAddress(req) ?? "unknown";
+const userAgent = getUserAgent(req) ?? "unknown";
 
     const turnstile = await verifyTurnstileToken(turnstileToken, ip);
     if (!turnstile.success) {
@@ -30,6 +56,97 @@ export async function POST(req: Request) {
         { error: "Security verification failed." },
         { status: 400 },
       );
+    }
+
+    const now = new Date();
+    const oneMinuteAgo = new Date(now.getTime() - 60 * 1000).toISOString();
+    const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000).toISOString();
+
+    // Pull recent attempts for this email
+    const { data: recentAttempts, error: recentAttemptsError } = await supabaseAdmin
+      .schema("private")
+      .from("login_attempts")
+      .select("success, attempted_at")
+      .eq("email", email)
+      .gte("attempted_at", fiveMinutesAgo)
+      .order("attempted_at", { ascending: false });
+
+    if (recentAttemptsError) {
+      console.error("recentAttemptsError", recentAttemptsError);
+      return NextResponse.json(
+        { error: "Unable to validate login limits right now." },
+        { status: 500 },
+      );
+    }
+
+    const attemptsLastMinute =
+      recentAttempts?.filter(
+        (attempt) => new Date(attempt.attempted_at).getTime() >= now.getTime() - 60 * 1000,
+      ).length ?? 0;
+
+    const attemptsLastFiveMinutes = recentAttempts?.length ?? 0;
+
+    const failedAttemptsLastFiveMinutes =
+      recentAttempts?.filter((attempt) => !attempt.success) ?? [];
+
+    // 1) Block after too many attempts in 1 minute
+    if (attemptsLastMinute >= MAX_ATTEMPTS_PER_MINUTE) {
+      return NextResponse.json(
+        {
+          error: "Too many login attempts. Please wait before trying again.",
+          code: "RATE_LIMIT_1_MINUTE",
+          retryAfterSeconds: 60,
+        },
+        {
+          status: 429,
+          headers: {
+            "Retry-After": "60",
+          },
+        },
+      );
+    }
+
+    // 2) Block after too many attempts in 5 minutes
+    if (attemptsLastFiveMinutes >= MAX_ATTEMPTS_PER_FIVE_MINUTES) {
+      return NextResponse.json(
+        {
+          error: "Too many login attempts in the last 5 minutes. Please try again later.",
+          code: "RATE_LIMIT_5_MINUTES",
+          retryAfterSeconds: 300,
+        },
+        {
+          status: 429,
+          headers: {
+            "Retry-After": "300",
+          },
+        },
+      );
+    }
+
+    // 3) Cooldown after 10 failed attempts
+    if (failedAttemptsLastFiveMinutes.length >= FAILED_ATTEMPTS_BEFORE_COOLDOWN) {
+      const newestFailedAttempt = new Date(failedAttemptsLastFiveMinutes[0].attempted_at);
+      const cooldownEndsAt = new Date(
+        newestFailedAttempt.getTime() + FAILED_COOLDOWN_SECONDS * 1000,
+      );
+
+      if (cooldownEndsAt.getTime() > now.getTime()) {
+        const retryAfterSeconds = secondsUntil(cooldownEndsAt);
+
+        return NextResponse.json(
+          {
+            error: `Too many failed logins. Try again in ${retryAfterSeconds} seconds.`,
+            code: "FAILED_ATTEMPT_COOLDOWN",
+            retryAfterSeconds,
+          },
+          {
+            status: 429,
+            headers: {
+              "Retry-After": String(retryAfterSeconds),
+            },
+          },
+        );
+      }
     }
 
     const { data: appUser, error: appUserError } = await supabaseAdmin
@@ -40,6 +157,13 @@ export async function POST(req: Request) {
       .maybeSingle();
 
     if (appUserError || !appUser) {
+      await recordLoginAttempt({
+        email,
+        ip,
+        userAgent,
+        success: false,
+      });
+
       return NextResponse.json(
         { error: "Invalid email or password." },
         { status: 401 },
@@ -47,6 +171,13 @@ export async function POST(req: Request) {
     }
 
     if (!appUser.verified) {
+      await recordLoginAttempt({
+        email,
+        ip,
+        userAgent,
+        success: false,
+      });
+
       return NextResponse.json(
         { error: "Verify your email before login." },
         { status: 403 },
@@ -71,13 +202,26 @@ export async function POST(req: Request) {
       });
 
     if (signInError || !signInData.user || !signInData.session) {
+      await recordLoginAttempt({
+        email,
+        ip,
+        userAgent,
+        success: false,
+      });
+
       return NextResponse.json(
         { error: "Invalid email or password." },
         { status: 401 },
       );
     }
 
-    // Track successful login
+    await recordLoginAttempt({
+      email,
+      ip,
+      userAgent,
+      success: true,
+    });
+
     await supabaseAdmin
       .schema("private")
       .from("users")
@@ -89,7 +233,6 @@ export async function POST(req: Request) {
       })
       .eq("id", appUser.id);
 
-    // Optional: add a normal login session row too
     await supabaseAdmin
       .schema("private")
       .from("sessions")
