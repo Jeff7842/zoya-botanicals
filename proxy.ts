@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
+
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -12,15 +13,17 @@ export function proxy(request: NextRequest) {
     }
   }
 
-  if (request.nextUrl.pathname.startsWith("/auth")) {
-    return NextResponse.redirect(
-      `https://auth.myzoya.shop${request.nextUrl.pathname}`
-    );
-  }
-
   return NextResponse.next();
 }
 
 export const config = {
   matcher: ["/auth/signup/verify-pending"],
 };
+
+export function middleware(request: NextRequest) {
+  if (request.nextUrl.pathname.startsWith("/auth")) {
+    return NextResponse.redirect(
+      `https://auth.myzoya.shop${request.nextUrl.pathname}`
+    );
+  }
+}
