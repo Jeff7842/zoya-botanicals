@@ -19,11 +19,3 @@ export function proxy(request: NextRequest) {
 export const config = {
   matcher: ["/auth/signup/verify-pending"],
 };
-
-export function middleware(request: NextRequest) {
-  if (request.nextUrl.pathname.startsWith("/auth")) {
-    return NextResponse.redirect(
-      `https://auth.myzoya.shop${request.nextUrl.pathname}`
-    );
-  }
-}

@@ -30,16 +30,6 @@ const nextConfig: NextConfig = {
     ],
   },
 
-  async redirects() {
-    return [
-      {
-        source: 'https://www.myzoya.shop/auth/:path*',
-        destination: 'https://auth.myzoya.shop/auth/:path*',
-        permanent: true,
-      },
-    ];
-  },
-
 };
 
 export default nextConfig;
