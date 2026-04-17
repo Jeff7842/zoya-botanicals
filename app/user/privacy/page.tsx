@@ -8,7 +8,7 @@ export default function PrivacyPage() {
     return (
       <>
       <Header/>
-        <div className="mx-auto pt-12 flex max-w-7xl flex-col gap-12 lg:flex-row">
+        <div className="mx-auto pt-16 flex max-w-7xl flex-col gap-12 lg:flex-row">
                 <aside className="w-full lg:sticky lg:top-28 lg:w-72 lg:self-start">
                   <div className="rounded-[1.75rem] border border-[#ebe7f2] bg-white p-6 dark:border-white/10 dark:bg-[#120d21]">
                     <p className="text-[0.68rem] font-bold uppercase tracking-[0.22em] text-[#938da7]">On this page</p>
