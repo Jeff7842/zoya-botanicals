@@ -137,8 +137,8 @@ export default function PasswordForm() {
               className="mt-1 h-5 w-5 rounded border-[#c6c0d8] text-[#34058d]"
             />
             <span>
-              I accept the <a href="/terms" className="font-bold text-[#34058d] dark:text-[#d7c4ff]">Terms & Conditions</a> and{" "}
-              <a href="/privacy" className="font-bold text-[#34058d] dark:text-[#d7c4ff]">Privacy Policy</a>.
+              I accept the <a href="/user/terms" className="font-bold text-[#34058d] dark:text-[#d7c4ff]">Terms & Conditions</a> and{" "}
+              <a href="/user/privacy" className="font-bold text-[#34058d] dark:text-[#d7c4ff]">Privacy Policy</a>.
             </span>
           </label>
 

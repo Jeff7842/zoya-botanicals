@@ -72,8 +72,8 @@ export default function namePage() {
             <div>
               <h3 className="mb-5 text-xs font-bold uppercase tracking-[0.22em] text-[var(--brand-accent)]">Legal</h3>
               <ul className="space-y-4 text-sm text-white/64">
-                <li><a className="transition-all duration-500 hover:text-white" href="/terms">Terms Page</a></li>
-                <li><a className="transition-all duration-500 hover:text-white" href="/privacy-policy">Privacy Policy</a></li>
+                <li><a className="transition-all duration-500 hover:text-white" href="/user/terms">Terms Page</a></li>
+                <li><a className="transition-all duration-500 hover:text-white" href="/user/privacy">Privacy Policy</a></li>
                 <li><a className="transition-all duration-500 hover:text-white" href="/contact">Nairobi, Kenya</a></li>
                 <li><a className="transition-all duration-500 hover:text-white" href="/login">Login</a></li>
               </ul>

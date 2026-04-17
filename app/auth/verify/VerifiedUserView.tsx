@@ -206,13 +206,13 @@ export default function VerifiedUserView({ status }: { status: StatusKey }) {
       <footer className="relative z-10 flex w-full flex-col items-center justify-between gap-6 px-[1.7rem] pb-[2rem] pt-0 text-[11px] font-normal uppercase tracking-[0.18em] text-[#93a0b7] md:flex-row">
         <div className="flex flex-wrap items-center gap-[2.2rem]">
           <Link
-            href="/privacy-policy"
+            href="/user/privacy"
             className="transition-colors duration-300 hover:text-[var(--brand-primary)]"
           >
             Privacy Policy
           </Link>
           <Link
-            href="/terms-of-service"
+            href="/user/terms"
             className="transition-colors duration-300 hover:text-[var(--brand-primary)]"
           >
             Terms of Service

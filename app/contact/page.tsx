@@ -529,14 +529,14 @@ function ContactFormCard() {
     <span className="flex-1 text-sm leading-6 text-[var(--text-muted)]">
       I accept the
       <Link
-        href="/terms"
+        href="/user/terms"
         className="mx-1 font-bold text-[var(--brand-primary)] hover:underline"
       >
         Terms & Agreement
       </Link>
       and
       <Link
-        href="/privacy"
+        href="/user/privacy"
         className="ml-1 font-bold text-[var(--brand-primary)] hover:underline"
       >
         Privacy Policy
