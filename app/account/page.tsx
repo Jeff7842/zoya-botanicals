@@ -1,4 +1,5 @@
 import AccountAvatarUpload from "@/components/account/account-avatar-upload";
+import AccountDeleteSection from "@/components/account/delete-account-section";
 import AccountLogoutButton from "@/components/account/logout-button";
 import AccountProfileForm from "@/components/account/profile-form";
 import { requireAccountProfile } from "@/lib/account/profile";
@@ -41,6 +42,7 @@ export default async function AccountPage() {
       </section>
 
       <AccountProfileForm profile={profile} />
+      <AccountDeleteSection displayName={profile.displayName} />
     </div>
   );
 }

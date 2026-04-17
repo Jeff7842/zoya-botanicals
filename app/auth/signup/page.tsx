@@ -6,11 +6,12 @@ import Script from "next/script";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@iconify/react";
-import { getProviders, signIn, useSession } from "next-auth/react";
+import { getProviders, signIn } from "next-auth/react";
 import "@/components/css/main.css";
 import "@/components/css/signup.css";
 import { useTheme } from "next-themes";
 import { useToast } from "@/components/toast/toast-provider";
+import { useActiveAuthState } from "@/lib/auth/client-auth";
 
 
 declare global {
@@ -50,7 +51,7 @@ const TURNSTILE_SITE_KEY =
 
 export default function ZoyaSignupPage() {
   const router = useRouter();
-  const { status } = useSession();
+  const { status } = useActiveAuthState();
   const { showToast } = useToast();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);

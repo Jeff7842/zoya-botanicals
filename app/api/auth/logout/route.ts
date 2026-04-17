@@ -1,21 +1,16 @@
 import { NextResponse } from "next/server";
-import { signOut } from "@/auth";
-
-function clearLegacySessionCookie(response: NextResponse) {
-  response.cookies.set("zoya_session", "", {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    maxAge: 0,
-  });
-}
+import { auth } from "@/auth";
+import { revokeAllUserSessions } from "@/lib/auth/session-store";
+import { applyNoStoreHeaders, clearAuthCookies } from "@/lib/auth/session-response";
 
 export async function POST() {
-  await signOut({ redirect: false });
+  const session = await auth();
+
+  if (session?.user?.id) {
+    await revokeAllUserSessions(session.user.id);
+  }
 
   const response = NextResponse.json({ success: true });
-  clearLegacySessionCookie(response);
-
-  return response;
+  clearAuthCookies(response);
+  return applyNoStoreHeaders(response);
 }

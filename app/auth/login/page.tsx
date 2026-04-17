@@ -5,11 +5,12 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@iconify/react";
-import { getProviders, signIn, useSession } from "next-auth/react";
+import { getProviders, signIn } from "next-auth/react";
 import "@/components/css/main.css";
 import "@/components/css/signup.css";
 import { useTheme } from "next-themes";
 import { useToast } from "@/components/toast/toast-provider";
+import { useActiveAuthState } from "@/lib/auth/client-auth";
 
 const OTP_LENGTH = 6;
 const MAX_RESENDS = 5;
@@ -18,7 +19,7 @@ const FIRST_WAIT = 15;
 export default function ZoyaLoginPage() {
   const router = useRouter();
   const { showToast } = useToast();
-  const { status } = useSession();
+  const { status } = useActiveAuthState();
 
   const [showPassword, setShowPassword] = useState(false);
   const { theme, setTheme, resolvedTheme } = useTheme();

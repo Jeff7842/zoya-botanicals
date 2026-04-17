@@ -225,6 +225,26 @@ export async function revokeUserSession(sessionToken: string | null | undefined)
   await cleanupAuthSessions();
 }
 
+export async function revokeAllUserSessions(userId: string | null | undefined) {
+  if (!userId) return;
+
+  const revokedAt = nowIso();
+
+  await supabaseAdmin
+    .schema("private")
+    .from("sessions")
+    .update({
+      is_active: false,
+      revoked_at: revokedAt,
+      last_seen_at: revokedAt,
+      expires_at: revokedAt,
+    })
+    .eq("user_id", userId)
+    .eq("is_active", true);
+
+  await cleanupAuthSessions();
+}
+
 export async function createVerificationSession(params: {
   userId: string;
   sessionToken: string;

@@ -40,6 +40,16 @@ function extractSupabaseObjectPath(value: string) {
   }
 }
 
+export function getStoredAccountAvatarObjectPath(value: string | null | undefined) {
+  const normalized = normalizeStoredImageValue(value);
+
+  if (!normalized) {
+    return null;
+  }
+
+  return extractSupabaseObjectPath(normalized) ?? (!/^https?:\/\//i.test(normalized) ? normalizeObjectPath(normalized) : null);
+}
+
 async function createResolvedAvatarUrl(objectPath: string, fallbackUrl = "") {
   const normalizedPath = normalizeObjectPath(objectPath);
   const { data, error } = await supabaseAdmin.storage
@@ -64,7 +74,7 @@ export async function resolveAccountAvatarUrl(value: string | null | undefined) 
     return normalized;
   }
 
-  const objectPath = extractSupabaseObjectPath(normalized) ?? (!/^https?:\/\//i.test(normalized) ? normalized : null);
+  const objectPath = getStoredAccountAvatarObjectPath(normalized);
 
   if (!objectPath) {
     return normalized;

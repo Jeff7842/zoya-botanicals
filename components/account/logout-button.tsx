@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { signOut } from "next-auth/react";
 import { Icon } from "@iconify/react";
 import { useToast } from "@/components/toast/toast-provider";
+import { logoutCurrentSession } from "@/lib/auth/client-auth";
 
 export default function AccountLogoutButton() {
   const { showToast } = useToast();
@@ -18,11 +18,15 @@ export default function AccountLogoutButton() {
         variant: "info",
       });
 
-      await signOut({
-        redirect: false,
-      });
+      await logoutCurrentSession();
 
       window.location.href = "/";
+    } catch (error) {
+      showToast({
+        title: "Logout failed",
+        message: error instanceof Error ? error.message : "We could not log you out right now.",
+        variant: "error",
+      });
     } finally {
       setPending(false);
     }

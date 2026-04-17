@@ -7,7 +7,7 @@ import "@/components/css/main.css";
 import { useTheme } from "next-themes";
 import { Icon } from "@iconify/react";
 import { usePathname } from "next/navigation";
-import { signOut, useSession } from "next-auth/react";
+import { logoutCurrentSession, useActiveAuthState } from "@/lib/auth/client-auth";
 
 const navLinks = [
   { label: "Home", href: "/" },
@@ -25,17 +25,10 @@ const accountQuickLinks = [
 ];
 
 export default function Navbar() {
-  const { data: session, status } = useSession();
+  const { status, user } = useActiveAuthState();
   const loggedIn = status === "authenticated";
-  const firstname =
-    session?.user?.firstName ??
-    session?.user?.name ??
-    "Name";
-  const username =
-    session?.user?.username ??
-    session?.user?.firstName ??
-    session?.user?.name ??
-    "Account";
+  const firstname = user?.first_name ?? user?.name ?? "Name";
+  const username = user?.username ?? user?.first_name ?? user?.name ?? "Account";
   const userInitial = (firstname || username || "A").charAt(0).toUpperCase();
   const { resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
@@ -100,13 +93,15 @@ const handleLogout = async () => {
   try {
     setIsLoggingOut(true);
 
-    await signOut({ redirect: false });
+    await logoutCurrentSession();
 
     setLogoutModalOpen(false);
     setMobileMenuOpen(false);
     setDesktopUserMenuOpen(false);
     setMobileUserMenuOpen(false);
     window.location.href = "/";
+  } catch (error) {
+    console.error("navbar logout error", error);
   } finally {
     setIsLoggingOut(false);
   }
@@ -210,7 +205,9 @@ useEffect(() => {
 
           {/* Desktop login/profile */}
           <div className="hidden md:flex">
-            {loggedIn ? (
+            {status === "loading" ? (
+              <div className="h-11 w-[6.5rem]" />
+            ) : loggedIn ? (
               <div className="relative" ref={desktopUserMenuRef}>
                 <button
                   type="button"
@@ -220,10 +217,10 @@ useEffect(() => {
                   className="flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--ghost-border)] bg-[var(--surface-soft)] text-[var(--brand-primary)] shadow-sm transition-all duration-500 hover:-translate-y-0.5 hover:shadow-md"
                 >
                   <span className="flex h-9 w-9 items-center justify-center rounded-[1rem] bg-[var(--brand-primary)]/10 text-sm font-bold">
-                    {session?.user?.image ? (
+                    {user?.imageUrl ? (
                       <span
                         className="block h-full w-full rounded-[1rem] bg-cover bg-center"
-                        style={{ backgroundImage: `url("${session.user.image}")` }}
+                        style={{ backgroundImage: `url("${user.imageUrl}")` }}
                       />
                     ) : (
                       userInitial
@@ -298,7 +295,9 @@ useEffect(() => {
           </a>
 
           {/* Mobile user icon: between cart and menu */}
-          {loggedIn && (
+          {status === "loading" ? (
+            <div className="h-11 w-11 md:hidden" />
+          ) : loggedIn ? (
             <div
               ref={mobileUserMenuRef}
               aria-label="Account"
@@ -350,6 +349,14 @@ useEffect(() => {
                 </button>
               </div>
             </div>
+          ) : (
+            <Link
+              href="/auth/login"
+              aria-label="Login"
+              className="flex h-11 items-center justify-center rounded-2xl border border-[var(--ghost-border)] bg-[var(--surface-soft)] px-4 text-sm font-semibold text-[var(--brand-primary)] shadow-sm transition-all duration-500 hover:-translate-y-0.5 hover:shadow-md md:hidden"
+            >
+              Login
+            </Link>
           )}
 
           {/* Mobile menu button */}
@@ -518,54 +525,54 @@ useEffect(() => {
     </nav>
 
     {logoutModalOpen && (
-  <div className="fixed inset-0 z-[120] flex items-center justify-center px-4">
-    <button
-      type="button"
-      aria-label="Close logout confirmation"
-      className="absolute inset-0 bg-[#14072f]/55 backdrop-blur-[6px]"
-      onClick={() => !isLoggingOut && setLogoutModalOpen(false)}
-    />
+      <div className="fixed inset-0 z-[120] flex items-center justify-center px-4">
+        <button
+          type="button"
+          aria-label="Close logout confirmation"
+          className="absolute inset-0 bg-[#14072f]/55 backdrop-blur-[6px]"
+          onClick={() => !isLoggingOut && setLogoutModalOpen(false)}
+        />
 
-    <div className="relative z-[121] w-full max-w-md overflow-hidden rounded-[2rem] border border-[var(--ghost-border)] bg-[var(--surface-card)] shadow-[0_30px_90px_rgba(24,7,55,0.24)]">
-      <div className="p-6 sm:p-7">
-        <div className="flex items-start gap-4">
-          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[1.4rem] bg-red-50 text-red-600 shadow-[0_10px_30px_rgba(220,38,38,0.12)] dark:bg-red-500/10 dark:text-red-300">
-            <Icon icon="solar:logout-2-outline" width="24" height="24" />
+        <div className="relative z-[121] w-full max-w-md overflow-hidden rounded-[2rem] border border-[var(--ghost-border)] bg-[var(--surface-card)] shadow-[0_30px_90px_rgba(24,7,55,0.24)]">
+          <div className="p-6 sm:p-7">
+            <div className="flex items-start gap-4">
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[1.4rem] bg-red-50 text-red-600 shadow-[0_10px_30px_rgba(220,38,38,0.12)] dark:bg-red-500/10 dark:text-red-300">
+                <Icon icon="solar:logout-2-outline" width="24" height="24" />
+              </div>
+
+              <div className="min-w-0 flex-1">
+                <h3 className="text-[1.15rem] font-extrabold tracking-[-0.02em] text-[var(--text-primary)]">
+                  Confirm logout
+                </h3>
+                <p className="mt-2 text-[0.96rem] leading-7 text-[var(--text-muted)]">
+                  Are you sure you want to log out of your curator account on this device?
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <button
+                type="button"
+                onClick={() => setLogoutModalOpen(false)}
+                disabled={isLoggingOut}
+                className="inline-flex items-center justify-center rounded-2xl bg-red-500 px-4 py-3 text-[0.95rem] font-semibold text-white transition-all duration-500 hover:-translate-y-0.5 hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                onClick={handleLogout}
+                disabled={isLoggingOut}
+                className="inline-flex items-center justify-center rounded-2xl bg-[var(--brand-primary)] px-4 py-3 text-[0.95rem] font-semibold text-white shadow-[0_16px_34px_rgba(52,5,141,0.18)] transition-all duration-500 hover:-translate-y-0.5 hover:shadow-[0_20px_40px_rgba(52,5,141,0.24)] disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isLoggingOut ? "Logging out..." : "Accept"}
+              </button>
+            </div>
           </div>
-
-          <div className="min-w-0 flex-1">
-            <h3 className="text-[1.15rem] font-extrabold tracking-[-0.02em] text-[var(--text-primary)]">
-              Confirm logout
-            </h3>
-            <p className="mt-2 text-[0.96rem] leading-7 text-[var(--text-muted)]">
-              Are you sure you want to log out of your curator account on this device?
-            </p>
-          </div>
-        </div>
-
-        <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <button
-            type="button"
-            onClick={() => setLogoutModalOpen(false)}
-            disabled={isLoggingOut}
-            className="inline-flex items-center justify-center rounded-2xl bg-red-500 px-4 py-3 text-[0.95rem] font-semibold text-white transition-all duration-500 hover:-translate-y-0.5 hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            Cancel
-          </button>
-
-          <button
-            type="button"
-            onClick={handleLogout}
-            disabled={isLoggingOut}
-            className="inline-flex items-center justify-center rounded-2xl bg-[var(--brand-primary)] px-4 py-3 text-[0.95rem] font-semibold text-white shadow-[0_16px_34px_rgba(52,5,141,0.18)] transition-all duration-500 hover:-translate-y-0.5 hover:shadow-[0_20px_40px_rgba(52,5,141,0.24)] disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {isLoggingOut ? "Logging out..." : "Accept"}
-          </button>
         </div>
       </div>
-    </div>
-  </div>
-)}
+    )}
    </>
     
   );
