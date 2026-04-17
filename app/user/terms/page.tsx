@@ -1,10 +1,14 @@
 'use client'
 
 import AccountTitleBadge from "@/components/account/title-badge";
+import  Header from "@/components/navbar/navbar";
+import Footer from "@/components/footer/footer";
 
 export default function TermsPage() {
     return (
-        <div className="mx-auto flex max-w-7xl flex-col gap-12 lg:flex-row">
+        <>
+        <Header/>
+        <div className="mx-auto pt-8 flex max-w-7xl flex-col gap-12 lg:flex-row">
                 <aside className="w-full lg:sticky lg:top-28 lg:w-72 lg:self-start">
                   <div className="rounded-[1.75rem] border border-[#ebe7f2] bg-white p-6 dark:border-white/10 dark:bg-[#120d21]">
                     <p className="text-[0.68rem] font-bold uppercase tracking-[0.22em] text-[#938da7]">On this page</p>
@@ -89,5 +93,7 @@ export default function TermsPage() {
                   </section>
                 </article>
               </div>
+              <Footer/>
+              </>
     );
 }
