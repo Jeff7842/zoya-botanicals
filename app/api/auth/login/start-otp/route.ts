@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import { supabaseAdmin } from "@/lib/supabase/supabase";
 import { getIpAddress, getUserAgent } from "@/lib/auth-utilis";
 import { sendLoginOtpEmail } from "@/lib/email/otp";
+import { hasActiveUserSession } from "@/lib/auth/session-store";
 
 type LoginStartBody = {
   email: string;
@@ -44,6 +45,19 @@ export async function POST(req: Request) {
       return NextResponse.json(
         { error: "Verify your email before login." },
         { status: 403 },
+      );
+    }
+
+    const hasActiveSession = await hasActiveUserSession(appUser.id);
+
+    if (hasActiveSession) {
+      return NextResponse.json(
+        {
+          error:
+            "This account is already signed in on another device. Log out there before signing in again.",
+          code: "ACTIVE_SESSION",
+        },
+        { status: 409 },
       );
     }
 

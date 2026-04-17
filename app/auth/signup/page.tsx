@@ -4,7 +4,9 @@ import Image from "next/image";
 import Link from "next/link";
 import Script from "next/script";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Icon } from "@iconify/react";
+import { getProviders, signIn, useSession } from "next-auth/react";
 import "@/components/css/main.css";
 import "@/components/css/signup.css";
 import { useTheme } from "next-themes";
@@ -47,10 +49,15 @@ const TURNSTILE_SITE_KEY =
 
 
 export default function ZoyaSignupPage() {
+  const router = useRouter();
+  const { status } = useSession();
+  const { showToast } = useToast();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [availableProviders, setAvailableProviders] = useState<string[]>([]);
+  const [providersResolved, setProvidersResolved] = useState(false);
 
   const { theme, setTheme, resolvedTheme } = useTheme();
 
@@ -82,6 +89,34 @@ export default function ZoyaSignupPage() {
 
   useEffect(() => {
     setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (status !== "authenticated") return;
+
+    showToast({
+      title: "Already logged in",
+      message: "You already have an active session. Redirecting to the homepage.",
+      variant: "info",
+    });
+
+    router.replace("/");
+    router.refresh();
+  }, [router, showToast, status]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    void getProviders().then((providers) => {
+      if (cancelled) return;
+
+      setAvailableProviders(Object.keys(providers ?? {}));
+      setProvidersResolved(true);
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
@@ -298,6 +333,23 @@ export default function ZoyaSignupPage() {
     });
   };
 
+  const handleOAuthSignIn = async (provider: "google" | "facebook") => {
+    const label = provider === "google" ? "Google" : "Facebook";
+
+    if (providersResolved && !availableProviders.includes(provider)) {
+      showToast({
+        title: `${label} unavailable`,
+        message: `${label} OAuth is not configured yet. Add its auth credentials to enable this signup flow.`,
+        variant: "warning",
+      });
+      return;
+    }
+
+    await signIn(provider, {
+      redirectTo: "/",
+    });
+  };
+
   useEffect(() => {
     if (!mounted) return;
 
@@ -316,8 +368,6 @@ export default function ZoyaSignupPage() {
 
     return () => clearTimeout(timeout);
   }, [mounted, resolvedTheme]);
-
-  const { showToast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
   e.preventDefault();
@@ -732,7 +782,9 @@ export default function ZoyaSignupPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-1 md:mt-0 md:gap-4">
                   <button
                     type="button"
-                    className="flex items-center justify-center gap-3 rounded-xl border border-[#cac4d5]/70 bg-white px-4 py-4 text-[1.05rem] font-semibold text-[#1a1c1e] transition-colors duration-200 hover:bg-[#f3f3f6] dark:border-white/10 dark:bg-[#1b1431] dark:text-white dark:hover:bg-[#251b43]"
+                    onClick={() => handleOAuthSignIn("google")}
+                    disabled={providersResolved && !availableProviders.includes("google")}
+                    className="flex items-center justify-center gap-3 rounded-xl border border-[#cac4d5]/70 bg-white px-4 py-4 text-[1.05rem] font-semibold text-[#1a1c1e] transition-colors duration-200 hover:bg-[#f3f3f6] disabled:cursor-not-allowed disabled:opacity-60 dark:border-white/10 dark:bg-[#1b1431] dark:text-white dark:hover:bg-[#251b43]"
                   >
                     <Icon icon="logos:google-icon" className="text-xl" />
                     <span>Google</span>
@@ -740,10 +792,12 @@ export default function ZoyaSignupPage() {
 
                   <button
                     type="button"
-                    className="flex items-center justify-center gap-3 rounded-xl border border-[#cac4d5]/70 bg-white px-4 py-4 text-[1.05rem] font-semibold text-[#1a1c1e] transition-colors duration-200 hover:bg-[#f3f3f6] dark:border-white/10 dark:bg-[#1b1431] dark:text-white dark:hover:bg-[#251b43]"
+                    onClick={() => handleOAuthSignIn("facebook")}
+                    disabled={providersResolved && !availableProviders.includes("facebook")}
+                    className="flex items-center justify-center gap-3 rounded-xl border border-[#cac4d5]/70 bg-white px-4 py-4 text-[1.05rem] font-semibold text-[#1a1c1e] transition-colors duration-200 hover:bg-[#f3f3f6] disabled:cursor-not-allowed disabled:opacity-60 dark:border-white/10 dark:bg-[#1b1431] dark:text-white dark:hover:bg-[#251b43]"
                   >
-                    <Icon icon="logos:apple" className="text-xl" />
-                    <span>Apple</span>
+                    <Icon icon="logos:facebook" className="text-xl" />
+                    <span>Facebook</span>
                   </button>
                 </div>
 

@@ -3,6 +3,7 @@ import { supabaseAdmin } from "@/lib/supabase/supabase";
 import { resend } from "@/lib/resend";
 import { generateVerificationToken, getIpAddress, getUserAgent, sha256 } from "@/lib/auth-utilis";
 import { verifyTurnstileToken } from "@/lib/verify-turnstile";
+import { createVerificationSession } from "@/lib/auth/session-store";
 
 type SignupBody = {
   firstName: string;
@@ -111,19 +112,17 @@ export async function POST(req: Request) {
 
     const expiresAt = new Date(Date.now() + 1000 * 60 * 30).toISOString(); // 30 mins
 
-    const { error: sessionError } = await supabaseAdmin
-      .schema("private")
-      .from("sessions")
-      .insert({
-        user_id: userId,
-        session_token: tokenHash,
-        ip_address: ip,
-        user_agent: userAgent,
-        is_active: true,
-        expires_at: expiresAt,
-        turnstile_verified: !isTurnstileDisabled,
-turnstile_verified_at: !isTurnstileDisabled ? new Date().toISOString() : null,
-      });
+    const { error: sessionError } = await createVerificationSession({
+      userId,
+      sessionToken: tokenHash,
+      ipAddress: ip,
+      userAgent,
+      expiresAt,
+      turnstileVerified: !isTurnstileDisabled,
+      turnstileVerifiedAt: !isTurnstileDisabled
+        ? new Date().toISOString()
+        : null,
+    });
 
     if (sessionError) {
       await supabaseAdmin
@@ -141,8 +140,9 @@ turnstile_verified_at: !isTurnstileDisabled ? new Date().toISOString() : null,
     }
 
     // 4) send custom verification email
+    const appUrl = (process.env.APP_URL ?? new URL(req.url).origin).trim();
     const verifyUrl =
-      `${process.env.APP_URL}/api/auth/verify?token=${encodeURIComponent(rawToken)}&uid=${encodeURIComponent(userId)}`;
+      `${appUrl}/api/auth/verify?token=${encodeURIComponent(rawToken)}&uid=${encodeURIComponent(userId)}`;
 
     const { error: emailError } = await resend.emails.send({
       from: process.env.EMAIL_FROM!,

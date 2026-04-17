@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@iconify/react";
+import { getProviders, signIn, useSession } from "next-auth/react";
 import "@/components/css/main.css";
 import "@/components/css/signup.css";
 import { useTheme } from "next-themes";
@@ -17,11 +18,15 @@ const FIRST_WAIT = 15;
 export default function ZoyaLoginPage() {
   const router = useRouter();
   const { showToast } = useToast();
+  const { status } = useSession();
 
   const [showPassword, setShowPassword] = useState(false);
-  const [loggedIn] = useState(false);
   const { theme, setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const alreadyLoggedInTimeoutRef = useRef<number | null>(null);
+  const alreadyLoggedInHandledRef = useRef(false);
+  const [availableProviders, setAvailableProviders] = useState<string[]>([]);
+  const [providersResolved, setProvidersResolved] = useState(false);
   
 
   const [form, setForm] = useState({
@@ -46,6 +51,100 @@ export default function ZoyaLoginPage() {
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (status !== "authenticated" || alreadyLoggedInHandledRef.current) {
+      return;
+    }
+
+    alreadyLoggedInHandledRef.current = true;
+
+    showToast({
+      title: "Already logged in",
+      message: "Redirecting you to your homepage.",
+      variant: "info",
+    });
+
+    alreadyLoggedInTimeoutRef.current = window.setTimeout(() => {
+      router.replace("/");
+    }, 900);
+  }, [router, showToast, status]);
+
+  useEffect(() => {
+    return () => {
+      if (alreadyLoggedInTimeoutRef.current !== null) {
+        window.clearTimeout(alreadyLoggedInTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    void getProviders().then((providers) => {
+      if (cancelled) return;
+
+      setAvailableProviders(Object.keys(providers ?? {}));
+      setProvidersResolved(true);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const error = params.get("error");
+
+    if (!error) return;
+
+    const authErrors: Record<
+      string,
+      {
+        title: string;
+        message: string;
+        variant: "error" | "warning" | "info";
+      }
+    > = {
+      ActiveSession: {
+        title: "Already signed in",
+        message: "This account already has an active session on another device.",
+        variant: "warning",
+      },
+      OAuthEmail: {
+        title: "Email required",
+        message: "Your OAuth provider did not return an email address for this account.",
+        variant: "error",
+      },
+      OAuthSignin: {
+        title: "OAuth sign-in failed",
+        message: "We could not start the provider sign-in flow. Please try again.",
+        variant: "error",
+      },
+      OAuthCallback: {
+        title: "OAuth callback failed",
+        message: "The provider returned an invalid response. Please try again.",
+        variant: "error",
+      },
+      AccessDenied: {
+        title: "Access denied",
+        message: "The OAuth request was canceled or denied by the provider.",
+        variant: "warning",
+      },
+      Configuration: {
+        title: "OAuth not configured",
+        message: "This provider is missing its server credentials. Add them in your environment variables.",
+        variant: "warning",
+      },
+    };
+
+    const authError = authErrors[error];
+
+    if (authError) {
+      showToast(authError);
+    }
+  }, [showToast]);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -126,11 +225,22 @@ export default function ZoyaLoginPage() {
     setOtpInvalidState(false);
   };
 
-    const [authUser, setAuthUser] = useState<{
-  id: string;
-  email: string;
-  username: string;
-} | null>(null);
+  const handleOAuthSignIn = async (provider: "google" | "facebook") => {
+    const label = provider === "google" ? "Google" : "Facebook";
+
+    if (providersResolved && !availableProviders.includes(provider)) {
+      showToast({
+        title: `${label} unavailable`,
+        message: `${label} OAuth is not configured yet. Add its auth credentials to enable this login.`,
+        variant: "warning",
+      });
+      return;
+    }
+
+    await signIn(provider, {
+      redirectTo: "/",
+    });
+  };
 
   const handleLoginSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
   event.preventDefault();
@@ -158,14 +268,6 @@ export default function ZoyaLoginPage() {
       });
       return;
     }
-
-    
-
-    setAuthUser({
-      id: data.userId,
-      email: data.email,
-      username: data.username,
-    });
 
     resetOtpState();
     setResendCount(0);
@@ -328,22 +430,16 @@ export default function ZoyaLoginPage() {
   setOtpError("");
 
   try {
-    const res = await fetch("/api/auth/login/verify-otp", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
+    const result = await signIn("credentials", {
         email: form.email,
         otp: otpValue,
-        rememberMe: form.rememberMe,
-      }),
+        rememberMe: String(form.rememberMe),
+        redirect: false,
+        redirectTo: "/",
     });
 
-    const data = await res.json();
-
-    if (!res.ok) {
-      throw new Error(data.error ?? "Invalid OTP");
+    if (!result?.ok) {
+      throw new Error(result?.error ?? "Invalid OTP");
     }
 
     setOtpModalOpen(false);
@@ -553,7 +649,9 @@ export default function ZoyaLoginPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-0 md:mt-0 md:gap-4">
                   <button
                     type="button"
-                    className="flex items-center justify-center gap-3 rounded-xl border border-[#cac4d5]/70 bg-white px-4 py-4 text-[1.05rem] font-semibold text-[#1a1c1e] transition-colors duration-200 hover:bg-[#f3f3f6] dark:border-white/10 dark:bg-[#1b1431] dark:text-white dark:hover:bg-[#251b43]"
+                    onClick={() => handleOAuthSignIn("google")}
+                    disabled={providersResolved && !availableProviders.includes("google")}
+                    className="flex items-center justify-center gap-3 rounded-xl border border-[#cac4d5]/70 bg-white px-4 py-4 text-[1.05rem] font-semibold text-[#1a1c1e] transition-colors duration-200 hover:bg-[#f3f3f6] disabled:cursor-not-allowed disabled:opacity-60 dark:border-white/10 dark:bg-[#1b1431] dark:text-white dark:hover:bg-[#251b43]"
                   >
                     <Icon icon="logos:google-icon" className="text-xl" />
                     <span>Google</span>
@@ -561,10 +659,12 @@ export default function ZoyaLoginPage() {
 
                   <button
                     type="button"
-                    className="flex items-center justify-center gap-3 rounded-xl border border-[#cac4d5]/70 bg-white px-4 py-4 text-[1.05rem] font-semibold text-[#1a1c1e] transition-colors duration-200 hover:bg-[#f3f3f6] dark:border-white/10 dark:bg-[#1b1431] dark:text-white dark:hover:bg-[#251b43]"
+                    onClick={() => handleOAuthSignIn("facebook")}
+                    disabled={providersResolved && !availableProviders.includes("facebook")}
+                    className="flex items-center justify-center gap-3 rounded-xl border border-[#cac4d5]/70 bg-white px-4 py-4 text-[1.05rem] font-semibold text-[#1a1c1e] transition-colors duration-200 hover:bg-[#f3f3f6] disabled:cursor-not-allowed disabled:opacity-60 dark:border-white/10 dark:bg-[#1b1431] dark:text-white dark:hover:bg-[#251b43]"
                   >
-                    <Icon icon="logos:apple" className="text-xl" />
-                    <span>Apple</span>
+                    <Icon icon="logos:facebook" className="text-xl" />
+                    <span>Facebook</span>
                   </button>
                 </div>
 
@@ -695,7 +795,7 @@ export default function ZoyaLoginPage() {
                 >
                   {isResendingOtp ?  (<span className="inline-flex items-center gap-3">
     <div className="size-4 animate-spin rounded-full border-2 border-[var(--brand-primary)] border-t-transparent" />
-    <span>Resnding OTP...</span>
+    <span>Resending OTP...</span>
   </span>) : "Resend OTP"}
                 </button>
               )}

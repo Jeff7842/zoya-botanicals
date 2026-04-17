@@ -3,6 +3,8 @@ import { createClient } from "@supabase/supabase-js";
 import { supabaseAdmin } from "@/lib/supabase/supabase";
 import { getIpAddress, getUserAgent } from "@/lib/auth-utilis";
 import { verifyTurnstileToken } from "@/lib/verify-turnstile";
+import { sendLoginOtpEmail } from "@/lib/email/otp";
+import { hasActiveUserSession } from "@/lib/auth/session-store";
 
 type LoginBody = {
   email: string;
@@ -48,7 +50,7 @@ export async function POST(req: Request) {
     }
 
     const ip = getIpAddress(req) ?? "unknown";
-const userAgent = getUserAgent(req) ?? "unknown";
+    const userAgent = getUserAgent(req) ?? "unknown";
 
     const turnstile = await verifyTurnstileToken(turnstileToken, ip);
     if (!turnstile.success) {
@@ -59,7 +61,6 @@ const userAgent = getUserAgent(req) ?? "unknown";
     }
 
     const now = new Date();
-    const oneMinuteAgo = new Date(now.getTime() - 60 * 1000).toISOString();
     const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000).toISOString();
 
     // Pull recent attempts for this email
@@ -152,7 +153,7 @@ const userAgent = getUserAgent(req) ?? "unknown";
     const { data: appUser, error: appUserError } = await supabaseAdmin
       .schema("private")
       .from("users")
-      .select("id, email, verified, login_count")
+      .select("id, email, first_name, username, verified")
       .eq("email", email)
       .maybeSingle();
 
@@ -184,6 +185,26 @@ const userAgent = getUserAgent(req) ?? "unknown";
       );
     }
 
+    const hasActiveSession = await hasActiveUserSession(appUser.id);
+
+    if (hasActiveSession) {
+      await recordLoginAttempt({
+        email,
+        ip,
+        userAgent,
+        success: false,
+      });
+
+      return NextResponse.json(
+        {
+          error:
+            "This account is already signed in on another device. Log out there before signing in again.",
+          code: "ACTIVE_SESSION",
+        },
+        { status: 409 },
+      );
+    }
+
     const supabasePublic = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -195,13 +216,12 @@ const userAgent = getUserAgent(req) ?? "unknown";
       },
     );
 
-    const { data: signInData, error: signInError } =
-      await supabasePublic.auth.signInWithPassword({
-        email,
-        password,
-      });
+    const { error: signInError } = await supabasePublic.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-    if (signInError || !signInData.user || !signInData.session) {
+    if (signInError) {
       await recordLoginAttempt({
         email,
         ip,
@@ -222,35 +242,47 @@ const userAgent = getUserAgent(req) ?? "unknown";
       success: true,
     });
 
-    await supabaseAdmin
+    const { data: otpRow, error: otpError } = await supabaseAdmin
       .schema("private")
-      .from("users")
-      .update({
-        last_login_ip: ip,
-        last_login_at: new Date().toISOString(),
-        login_count: (appUser.login_count ?? 0) + 1,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", appUser.id);
-
-    await supabaseAdmin
-      .schema("private")
-      .from("sessions")
+      .from("otps")
       .insert({
         user_id: appUser.id,
-        session_token: signInData.session.access_token,
+        otp_purpose: "login_2fa",
+        sent_to: email,
         ip_address: ip,
-        user_agent: userAgent,
-        is_active: true,
-        expires_at: new Date(signInData.session.expires_at! * 1000).toISOString(),
         turnstile_verified: true,
         turnstile_verified_at: new Date().toISOString(),
-      });
+      })
+      .select("id, otp_code, expires_at")
+      .single();
+
+    if (otpError || !otpRow) {
+      return NextResponse.json(
+        { error: otpError?.message ?? "Could not generate OTP." },
+        { status: 400 },
+      );
+    }
+
+    const { error: emailError } = await sendLoginOtpEmail({
+      to: email,
+      firstName: appUser.first_name,
+      otpCode: otpRow.otp_code,
+    });
+
+    if (emailError) {
+      return NextResponse.json(
+        { error: "Could not send OTP email." },
+        { status: 400 },
+      );
+    }
 
     return NextResponse.json({
       success: true,
-      session: signInData.session,
-      user: signInData.user,
+      message: "OTP sent successfully.",
+      userId: appUser.id,
+      email: appUser.email,
+      username: appUser.username,
+      expiresAt: otpRow.expires_at,
     });
   } catch (error) {
     console.error("login error", error);

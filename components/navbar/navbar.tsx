@@ -7,6 +7,7 @@ import "@/components/css/main.css";
 import { useTheme } from "next-themes";
 import { Icon } from "@iconify/react";
 import { usePathname } from "next/navigation";
+import { signOut, useSession } from "next-auth/react";
 
 const navLinks = [
   { label: "Home", href: "/" },
@@ -16,39 +17,74 @@ const navLinks = [
   { label: "Contact", href: "/contact" },
 ];
 
+const accountQuickLinks = [
+  { label: "Profile", href: "/account", icon: "solar:user-linear" },
+  { label: "Wishlist", href: "/wishlist", icon: "solar:heart-linear" },
+  { label: "Settings", href: "/account/settings", icon: "solar:settings-linear" },
+  { label: "Orders", href: "/account/orders", icon: "solar:bag-4-linear" },
+];
+
 export default function Navbar() {
-  const [loggedIn, setLoggedIn] = useState(false);
-const [username, setUsername] = useState("");
+  const { data: session, status } = useSession();
+  const loggedIn = status === "authenticated";
+  const firstname =
+    session?.user?.firstName ??
+    session?.user?.name ??
+    "Name";
+  const username =
+    session?.user?.username ??
+    session?.user?.firstName ??
+    session?.user?.name ??
+    "Account";
+  const userInitial = (firstname || username || "A").charAt(0).toUpperCase();
   const { resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
-    const pathname = usePathname();
-    const [logoutModalOpen, setLogoutModalOpen] = useState(false);
-const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const desktopUserMenuRef = useRef<HTMLDivElement | null>(null);
+  const mobileUserMenuRef = useRef<HTMLDivElement | null>(null);
+  const pathname = usePathname();
+  const [logoutModalOpen, setLogoutModalOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [desktopUserMenuOpen, setDesktopUserMenuOpen] = useState(false);
+  const [mobileUserMenuOpen, setMobileUserMenuOpen] = useState(false);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
   }, []);
 
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (!menuRef.current) return;
-      if (!menuRef.current.contains(event.target as Node)) {
+      const target = event.target as Node;
+
+      if (menuRef.current && !menuRef.current.contains(target)) {
         setMobileMenuOpen(false);
+      }
+
+      if (desktopUserMenuRef.current && !desktopUserMenuRef.current.contains(target)) {
+        setDesktopUserMenuOpen(false);
+      }
+
+      if (mobileUserMenuRef.current && !mobileUserMenuRef.current.contains(target)) {
+        setMobileUserMenuOpen(false);
       }
     };
 
-    if (mobileMenuOpen) {
+    if (mobileMenuOpen || desktopUserMenuOpen || mobileUserMenuOpen) {
       document.addEventListener("mousedown", handleClickOutside);
     }
 
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [mobileMenuOpen]);
+  }, [desktopUserMenuOpen, mobileMenuOpen, mobileUserMenuOpen]);
+
+  useEffect(() => {
+    setMobileMenuOpen(false);
+    setDesktopUserMenuOpen(false);
+    setMobileUserMenuOpen(false);
+  }, [pathname]);
 
   const toggleTheme = () => {
   if (!mounted) return;
@@ -60,52 +96,16 @@ const [isLoggingOut, setIsLoggingOut] = useState(false);
     return pathname === href || pathname.startsWith(`${href}/`);
   };
 
-  useEffect(() => {
-  let active = true;
-
-  const loadUser = async () => {
-    try {
-      const res = await fetch("/api/auth/me", {
-        method: "GET",
-        credentials: "include",
-      });
-
-      const data = await res.json();
-
-      if (!active) return;
-
-      if (data.authenticated && data.user) {
-        setLoggedIn(true);
-        setUsername(data.user.username ?? data.user.first_name ?? "Account");
-      } else {
-        setLoggedIn(false);
-        setUsername("");
-      }
-    } catch {
-      if (!active) return;
-      setLoggedIn(false);
-      setUsername("");
-    }
-  };
-
-  loadUser();
-
-  return () => {
-    active = false;
-  };
-}, []);
-
 const handleLogout = async () => {
   try {
     setIsLoggingOut(true);
 
-    await fetch("/api/auth/logout", {
-      method: "POST",
-      credentials: "include",
-    });
+    await signOut({ redirect: false });
 
     setLogoutModalOpen(false);
     setMobileMenuOpen(false);
+    setDesktopUserMenuOpen(false);
+    setMobileUserMenuOpen(false);
     window.location.href = "/";
   } finally {
     setIsLoggingOut(false);
@@ -131,7 +131,7 @@ useEffect(() => {
         <Link href="/" className="group flex min-w-0 items-center gap-3">
           <div className=" h-auto w-5 shrink-0  transition-transform duration-500 group-hover:scale-105 sm:w-5">
             <Image
-              src={ resolvedTheme ? '/images/zoya/zoya-symbol-yellow.webp' :'/images/zoya/zoya-symbol-dark-2.webp' }
+              src={mounted && resolvedTheme === "dark" ? "/images/zoya/zoya-symbol-yellow.webp" : "/images/zoya/zoya-symbol-dark-2.webp"}
               alt="ZOYA Botanicals logo"
               width={1000}
               height={1000}
@@ -211,29 +211,80 @@ useEffect(() => {
           {/* Desktop login/profile */}
           <div className="hidden md:flex">
             {loggedIn ? (
-              
-    <a
-      href="/account"
-      className="flex items-center gap-3 rounded-2xl border border-[var(--ghost-border)] bg-[var(--surface-soft)] px-3 py-2 text-[var(--brand-primary)] shadow-sm transition-all duration-500 hover:scale-105 hover:shadow-md"
-    >
-      <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[var(--brand-primary)]/10 text-[var(--brand-primary)]">
-        <Icon icon="solar:user-outline" width="20" height="20" />
-      </span>
+              <div className="relative" ref={desktopUserMenuRef}>
+                <button
+                  type="button"
+                  aria-label="Open account menu"
+                  aria-expanded={desktopUserMenuOpen}
+                  onClick={() => setDesktopUserMenuOpen((prev) => !prev)}
+                  className="flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--ghost-border)] bg-[var(--surface-soft)] text-[var(--brand-primary)] shadow-sm transition-all duration-500 hover:-translate-y-0.5 hover:shadow-md"
+                >
+                  <span className="flex h-9 w-9 items-center justify-center rounded-[1rem] bg-[var(--brand-primary)]/10 text-sm font-bold">
+                    {session?.user?.image ? (
+                      <span
+                        className="block h-full w-full rounded-[1rem] bg-cover bg-center"
+                        style={{ backgroundImage: `url("${session.user.image}")` }}
+                      />
+                    ) : (
+                      userInitial
+                    )}
+                  </span>
+                </button>
 
-      <span className="flex flex-col leading-tight">
-        <span className="text-sm font-semibold">Account</span>
-        <span className="text-[11px] font-medium text-[var(--text-muted)]">
-          {username}
-        </span>
-      </span>
-    </a>
-  ) : (
-              <a
+                <div
+                  className={`absolute right-0 top-[calc(100%+14px)] w-[280px] rounded-[1.8rem] border border-white/10 bg-[color:var(--nav-bg)]/97 p-3 shadow-[0_26px_80px_rgba(0,0,0,0.2)] backdrop-blur-2xl transition-all duration-300 ${
+                    desktopUserMenuOpen
+                      ? "pointer-events-auto translate-y-0 opacity-100"
+                      : "pointer-events-none -translate-y-2 opacity-0"
+                  }`}
+                >
+                  <div className="rounded-[1.4rem] border border-white/10 bg-[var(--surface-soft)]/70 p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-[1rem] bg-[var(--brand-primary)]/12 text-[var(--brand-primary)]">
+                        <Icon icon="solar:user-outline" width="20" height="20" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-bold text-[var(--text-main)]">{firstname}</p>
+                        <p className="truncate text-xs text-[var(--text-muted)]">@{username}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-3 space-y-2 rounded-[1.5rem] border border-white/10 bg-[var(--surface-soft)]/60 p-3">
+                    {accountQuickLinks.map((link) => (
+                      <Link
+                        key={link.href}
+                        href={link.href}
+                        className="flex items-center justify-between rounded-2xl px-3 py-3 text-sm font-semibold text-[var(--text-main)] transition-all duration-300 hover:bg-white/5 hover:text-[var(--brand-primary)]"
+                      >
+                        <span className="flex items-center gap-3">
+                          <span className="flex h-10 w-10 items-center justify-center rounded-[1rem] bg-[var(--brand-primary)]/10 text-[var(--brand-primary)]">
+                            <Icon icon={link.icon} width="18" height="18" />
+                          </span>
+                          <span>{link.label}</span>
+                        </span>
+                        <Icon icon="solar:alt-arrow-right-linear" width="16" height="16" />
+                      </Link>
+                    ))}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setLogoutModalOpen(true)}
+                    className="mt-3 flex w-full items-center justify-center gap-2 rounded-[1.3rem] border border-red-200 bg-red-50 px-4 py-3 text-[0.95rem] font-semibold text-red-600 transition-all duration-300 hover:-translate-y-0.5 hover:bg-red-100 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-300 dark:hover:bg-red-500/15"
+                  >
+                    <Icon icon="solar:logout-2-outline" width="18" height="18" />
+                    <span>Log out</span>
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <Link
                 href="/auth/login"
                 className="ripple-btn rounded-xl zoya-outline-btn px-4 py-2 dark:border-[var(--brand-primary)]"
               >
                 Login
-              </a>
+              </Link>
             )}
           </div>
 
@@ -248,14 +299,58 @@ useEffect(() => {
 
           {/* Mobile user icon: between cart and menu */}
           {loggedIn && (
-  <a
-    href="/account"
-    aria-label="Account"
-    className="flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--ghost-border)] bg-[var(--surface-soft)] text-[var(--brand-primary)] shadow-sm transition-all duration-500 hover:-translate-y-0.5 hover:shadow-md md:hidden"
-  >
-    <Icon icon="solar:user-outline" width="22" height="22" />
-  </a>
-)}
+            <div
+              ref={mobileUserMenuRef}
+              aria-label="Account"
+              className="relative md:hidden"
+            >
+              <button
+                type="button"
+                onClick={() => setMobileUserMenuOpen((prev) => !prev)}
+                className="flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--ghost-border)] bg-[var(--surface-soft)] text-[var(--brand-primary)] shadow-sm transition-all duration-500 hover:-translate-y-0.5 hover:shadow-md"
+              >
+                <Icon icon="solar:user-outline" width="22" height="22" />
+              </button>
+
+              <div
+                className={`absolute right-0 top-[calc(100%+14px)] w-[260px] rounded-[1.6rem] border border-white/10 bg-[color:var(--nav-bg)]/97 p-3 shadow-[0_26px_80px_rgba(0,0,0,0.2)] backdrop-blur-2xl transition-all duration-300 ${
+                  mobileUserMenuOpen
+                    ? "pointer-events-auto translate-y-0 opacity-100"
+                    : "pointer-events-none -translate-y-2 opacity-0"
+                }`}
+              >
+                <div className="rounded-[1.3rem] border border-white/10 bg-[var(--surface-soft)]/70 p-3">
+                  <p className="truncate text-sm font-bold text-[var(--text-main)]">{firstname}</p>
+                  <p className="mt-1 truncate text-xs text-[var(--text-muted)]">@{username}</p>
+                </div>
+
+                <div className="mt-3 space-y-2 rounded-[1.35rem] border border-white/10 bg-[var(--surface-soft)]/60 p-3">
+                  {accountQuickLinks.map((link) => (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      className="flex items-center justify-between rounded-2xl px-3 py-3 text-sm font-semibold text-[var(--text-main)] transition-all duration-300 hover:bg-white/5 hover:text-[var(--brand-primary)]"
+                    >
+                      <span className="flex items-center gap-3">
+                        <Icon icon={link.icon} width="18" height="18" className="text-[var(--brand-primary)]" />
+                        <span>{link.label}</span>
+                      </span>
+                      <Icon icon="solar:alt-arrow-right-linear" width="16" height="16" />
+                    </Link>
+                  ))}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setLogoutModalOpen(true)}
+                  className="mt-3 flex w-full items-center justify-center gap-2 rounded-[1.2rem] border border-red-200 bg-red-50 px-4 py-3 text-[0.95rem] font-semibold text-red-600 transition-all duration-300 hover:bg-red-100 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-300"
+                >
+                  <Icon icon="solar:logout-2-outline" width="18" height="18" />
+                  <span>Log out</span>
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Mobile menu button */}
           <div className="relative lg:hidden" ref={menuRef}>
@@ -308,6 +403,7 @@ useEffect(() => {
                 <div className="mt-3 space-y-2 rounded-3xl border border-white/10 bg-[var(--surface-soft)]/60 p-3">
                   {navLinks.map((link) => {
                     const active = isActiveLink(link.href);
+
                     return (
                       <a
                         key={link.label}
@@ -336,14 +432,14 @@ useEffect(() => {
                     <div className="flex items-center gap-3">
                       <div className="flex h-10 w-10 p-2 items-center justify-center rounded-2xl bg-[var(--brand-primary)]/10 text-[var(--brand-primary)]">
                         {mounted ? (
-  resolvedTheme === "light" ? (
-    <Icon icon="uil:moon" width="20" height="20" />
-  ) : (
-    <Icon icon="solar:sun-linear" width="20" height="20" />
-  )
-) : (
-  <Icon icon="solar:sun-linear" width="20" height="20" />
-)}
+                          resolvedTheme === "light" ? (
+                            <Icon icon="uil:moon" width="20" height="20" />
+                          ) : (
+                            <Icon icon="solar:sun-linear" width="20" height="20" />
+                          )
+                        ) : (
+                          <Icon icon="solar:sun-linear" width="20" height="20" />
+                        )}
                       </div>
                       <div className="text-left">
                         <p className="font-bold">Appearance</p>
@@ -357,45 +453,58 @@ useEffect(() => {
                     </div>
                   </button>
                 </div>
-{/* Top panel */}
+
+                {/* Top panel */}
                 <div className="rounded-3xl border items-center border-white/10 bg-[var(--surface-soft)]/70 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] mt-3">
                   {!loggedIn ? (
-                    <a
+                    <Link
                       href="/auth/login"
                       onClick={() => setMobileMenuOpen(false)}
                       className="flex items-center justify-between align-middle rounded-2xl bg-[var(--brand-primary)] px-4 py-3 text-sm font-bold text-white dark:text-[#34058d] transition-all duration-500 hover:scale-[1.01] hover:bg-[var(--brand-primary-soft)]"
                     >
                       <span>Login to your account</span>
                       <Icon icon="solar:login-2-linear" width="20" height="20" />
-                    </a>
+                    </Link>
                   ) : (
                     <div className="space-y-3">
-                    <a
-                      href="/account"
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="flex items-center justify-between rounded-2xl bg-[var(--brand-primary)]/10 px-4 py-3 text-[var(--brand-primary)] transition-all duration-500 hover:bg-[var(--brand-primary)]/15"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[var(--brand-primary)] text-white">
-                          <Icon icon="solar:user-outline" width="20" height="20" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-bold">My Account</p>
-                          <p className="text-xs opacity-70">{username}</p>
+                      <div className="rounded-2xl bg-[var(--brand-primary)]/10 px-4 py-3 text-[var(--brand-primary)]">
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[var(--brand-primary)] text-white">
+                            <Icon icon="solar:user-outline" width="20" height="20" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold">{firstname}</p>
+                            <p className="text-xs opacity-70">@{username}</p>
+                          </div>
                         </div>
                       </div>
-                      <Icon icon="solar:alt-arrow-right-linear" width="18" height="18" />
-                    </a>
 
-                    <button
-  type="button"
-  onClick={() => setLogoutModalOpen(true)}
-  className="flex w-full items-center justify-center gap-2 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-[0.95rem] font-semibold text-red-600 transition-all duration-500 hover:-translate-y-0.5 hover:bg-red-100 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-300 dark:hover:bg-red-500/15"
->
-      <Icon icon="solar:logout-2-outline" width="18" height="18" />
-      <span>Log out</span>
-    </button>
-    </div>
+                      <div className="space-y-2">
+                        {accountQuickLinks.map((link) => (
+                          <Link
+                            key={link.href}
+                            href={link.href}
+                            onClick={() => setMobileMenuOpen(false)}
+                            className="flex items-center justify-between rounded-2xl px-3 py-3 text-sm font-semibold text-[var(--text-main)] transition-all duration-300 hover:bg-white/5 hover:text-[var(--brand-primary)]"
+                          >
+                            <span className="flex items-center gap-3">
+                              <Icon icon={link.icon} width="18" height="18" className="text-[var(--brand-primary)]" />
+                              <span>{link.label}</span>
+                            </span>
+                            <Icon icon="solar:alt-arrow-right-linear" width="18" height="18" />
+                          </Link>
+                        ))}
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => setLogoutModalOpen(true)}
+                        className="flex w-full items-center justify-center gap-2 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-[0.95rem] font-semibold text-red-600 transition-all duration-500 hover:-translate-y-0.5 hover:bg-red-100 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-300 dark:hover:bg-red-500/15"
+                      >
+                        <Icon icon="solar:logout-2-outline" width="18" height="18" />
+                        <span>Log out</span>
+                      </button>
+                    </div>
                   )}
                 </div>
                 

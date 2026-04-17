@@ -1,23 +1,7 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
-import { supabaseAdmin } from "@/lib/supabase/supabase";
+import { signOut } from "@/auth";
 
-export async function POST() {
-  const cookieStore = await cookies();
-  const sessionToken = cookieStore.get("zoya_session")?.value;
-
-  if (sessionToken) {
-    await supabaseAdmin
-      .schema("private")
-      .from("sessions")
-      .update({
-        is_active: false,
-        revoked_at: new Date().toISOString(),
-      })
-      .eq("session_token", sessionToken);
-  }
-
-  const response = NextResponse.json({ success: true });
+function clearLegacySessionCookie(response: NextResponse) {
   response.cookies.set("zoya_session", "", {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
@@ -25,6 +9,13 @@ export async function POST() {
     path: "/",
     maxAge: 0,
   });
+}
+
+export async function POST() {
+  await signOut({ redirect: false });
+
+  const response = NextResponse.json({ success: true });
+  clearLegacySessionCookie(response);
 
   return response;
 }
