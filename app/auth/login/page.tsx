@@ -115,7 +115,7 @@ export default function ZoyaLoginPage() {
       },
       OAuthEmail: {
         title: "Email required",
-        message: "Your OAuth provider did not return an email address for this account.",
+        message: "Incorrect email address or password.",
         variant: "error",
       },
       OAuthSignin: {
@@ -130,12 +130,12 @@ export default function ZoyaLoginPage() {
       },
       AccessDenied: {
         title: "Access denied",
-        message: "The OAuth request was canceled or denied by the provider.",
+        message: "The request was canceled or denied by the provider.",
         variant: "warning",
       },
       Configuration: {
         title: "OAuth not configured",
-        message: "This provider is missing its server credentials. Add them in your environment variables.",
+        message: "This provider is missing its credentials.",
         variant: "warning",
       },
     };
